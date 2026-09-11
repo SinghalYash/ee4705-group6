@@ -1,0 +1,4 @@
+mj-env/
+__pycache__/
+*.pyc
+camera_test_*.png 
