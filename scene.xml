@@ -60,27 +60,65 @@
               </body>
 
               <body name="gripper_base" pos="0.08 0 0">
-                <geom type="box" size="0.02 0.05 0.02" rgba="0.2 0.2 0.2 1"/>
-      
-       <!-- End-effector reference point for inverse kinematics; make invisible after testing --> 
+
+                <!-- Palm -->
+                <geom name="gripper_palm"
+                      type="box"
+                      size="0.02 0.06 0.02"
+                      rgba="0.2 0.2 0.2 1"/>
+
+                <!-- End-effector reference -->
                 <site name="gripper_site"
-                      pos="0 0 -0.025"
+                      pos="0 0 0"
                       size="0.006"
                       rgba="1 0 1 1"/>
-                   <!-- Centre where a grasped object should sit -->
+
+                <!--
+                    Centre where the object should be located
+                    during a grasp.
+                -->
                 <site name="grasp_site"
-                      pos="0 0 -0.05"
+                      pos="0.07 0 0"
                       size="0.008"
                       rgba="0 1 1 1"/>
 
-                <body name="finger_left" pos="0 0.03 0">
-                  <joint name="finger_left_joint" type="slide" axis="0 1 0" range="0 0.04" damping="5" armature="0.01"/>
-                  <geom type="box" size="0.01 0.01 0.03" rgba="0.1 0.1 0.1 1" friction="1.5 0.5 0.1"/>
+                <!-- Left finger -->
+                <body name="finger_left" pos="0.04 0.045 0">
+
+                  <joint name="finger_left_joint"
+                        type="slide"
+                        axis="0 1 0"
+                        range="0 0.04"
+                        damping="5"
+                        armature="0.01"/>
+
+                  <geom name="finger_left_geom"
+                        type="box"
+                        size="0.05 0.01 0.015"
+                        rgba="0.1 0.1 0.1 1"
+                        friction="2 0.5 0.1"/>
+
                 </body>
-                <body name="finger_right" pos="0 -0.03 0">
-                  <joint name="finger_right_joint" type="slide" axis="0 -1 0" range="0 0.04" damping="5" armature="0.01"/>
-                  <geom type="box" size="0.01 0.01 0.03" rgba="0.1 0.1 0.1 1" friction="1.5 0.5 0.1"/>
+
+                <!-- Right finger -->
+                <body name="finger_right" pos="0.04 -0.045 0">
+
+                  <joint name="finger_right_joint"
+                        type="slide"
+                        axis="0 -1 0"
+                        range="0 0.04"
+                        damping="5"
+                        armature="0.01"/>
+
+                  <geom name="finger_right_geom"
+                        type="box"
+                        size="0.05 0.01 0.015"
+                        rgba="0.1 0.1 0.1 1"
+                        friction="2 0.5 0.1"/>
+
                 </body>
+
+              
               </body>
             </body>
           </body>
@@ -93,11 +131,34 @@
   </worldbody>
 
   <actuator>
-    <position name="act_shoulder_pan" joint="shoulder_pan" kp="50" kv="8" ctrlrange="-3.14 3.14"/>
-    <position name="act_shoulder_lift" joint="shoulder_lift" kp="50" kv="8" ctrlrange="-1.57 1.57"/>
-    <position name="act_elbow" joint="elbow" kp="50" kv="6" ctrlrange="-2.6 2.6"/>
-    <position name="act_wrist_pitch" joint="wrist_pitch" kp="30" kv="4" ctrlrange="-1.57 1.57"/>
-    <position name="act_finger_left" joint="finger_left_joint" kp="200" kv="10" ctrlrange="0 0.04"/>
-    <position name="act_finger_right" joint="finger_right_joint" kp="200" kv="10" ctrlrange="0 0.04"/>
+    <position name="act_shoulder_pan"
+              joint="shoulder_pan"
+              kp="50" kv="8"
+              ctrlrange="-3.1416 3.1416"/>
+
+    <position name="act_shoulder_lift"
+              joint="shoulder_lift"
+              kp="50" kv="8"
+              ctrlrange="-1.5708 1.5708"/>
+
+    <position name="act_elbow"
+              joint="elbow"
+              kp="50" kv="6"
+              ctrlrange="-2.618 2.618"/>
+
+    <position name="act_wrist_pitch"
+              joint="wrist_pitch"
+              kp="30" kv="4"
+              ctrlrange="-1.5708 1.5708"/>
+
+    <position name="act_finger_left"
+              joint="finger_left_joint"
+              kp="200" kv="10"
+              ctrlrange="0 0.04"/>
+
+    <position name="act_finger_right"
+              joint="finger_right_joint"
+              kp="200" kv="10"
+              ctrlrange="0 0.04"/>
   </actuator>
 </mujoco>

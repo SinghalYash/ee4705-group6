@@ -23,21 +23,46 @@ ARM_ACTUATORS = [
 GRIPPER_OPEN = 0.025
 
 
-def solve_ik(model, data, site_id, target_pos,
-             qpos_ids, dof_ids):
+def solve_ik(
+    model,
+    data,
+    site_id,
+    target_pos,
+    qpos_ids,
+    dof_ids,
+    label="TARGET",
+):
+    best_error = float("inf")
+    best_qpos = None
 
-    for iteration in range(500):
+    for iteration in range(1000):
 
         mujoco.mj_forward(model, data)
 
         current_pos = data.site_xpos[site_id].copy()
         error = target_pos - current_pos
+        error_norm = np.linalg.norm(error)
 
-        if np.linalg.norm(error) < 0.005:
-            return np.array(
+        # Remember best configuration encountered
+        if error_norm < best_error:
+            best_error = error_norm
+            best_qpos = np.array(
                 [data.qpos[qid] for qid in qpos_ids]
             )
 
+        # Success criterion: within 5 mm
+        if error_norm < 0.005:
+            print(
+                f"{label}: IK converged after "
+                f"{iteration} iterations."
+            )
+            print(f"{label}: requested = {target_pos}")
+            print(f"{label}: reached   = {current_pos}")
+            print(f"{label}: error     = {error_norm:.6f} m")
+
+            return best_qpos, True
+
+        # Translational Jacobian
         jacp = np.zeros((3, model.nv))
         jacr = np.zeros((3, model.nv))
 
@@ -51,6 +76,7 @@ def solve_ik(model, data, site_id, target_pos,
 
         J = jacp[:, dof_ids]
 
+        # Damped least-squares IK
         damping = 0.05
 
         dq = (
@@ -62,17 +88,29 @@ def solve_ik(model, data, site_id, target_pos,
             )
         )
 
-        dq = np.clip(dq, -0.05, 0.05)
+        # Smaller step for stability
+        dq = np.clip(dq, -0.03, 0.03)
 
         for i, qid in enumerate(qpos_ids):
             data.qpos[qid] += dq[i]
 
-    print("WARNING: IK did not fully converge.")
+    # --------------------------------------------------
+    # IK failed — restore best solution found
+    # --------------------------------------------------
 
-    return np.array(
-        [data.qpos[qid] for qid in qpos_ids]
-    )
+    for i, qid in enumerate(qpos_ids):
+        data.qpos[qid] = best_qpos[i]
 
+    mujoco.mj_forward(model, data)
+
+    reached = data.site_xpos[site_id].copy()
+
+    print(f"\nWARNING: {label} IK did not converge.")
+    print(f"{label}: requested = {target_pos}")
+    print(f"{label}: best reached = {reached}")
+    print(f"{label}: best error = {best_error:.6f} m")
+
+    return best_qpos, False
 
 def move_to_joint_target(
     model,
@@ -188,7 +226,7 @@ def main():
     pre_grasp = stone_pos + np.array([
         0.0,
         0.0,
-        0.06,
+        0.10,
     ])
 
     print("Above-stone target:", above_stone)
@@ -198,13 +236,14 @@ def main():
     # Solve IK offline
     # ------------------------------------------------------
 
-    above_joint_target = solve_ik(
+    above_joint_target, above_ok = solve_ik(
         model,
         data,
         grasp_site_id,
         above_stone,
         qpos_ids,
         dof_ids,
+        label="ABOVE",
     )
 
     print(
@@ -213,14 +252,27 @@ def main():
     )
 
     # Start second IK calculation from the first solution.
-    pregrasp_joint_target = solve_ik(
+    pregrasp_joint_target, pregrasp_ok = solve_ik(
         model,
         data,
         grasp_site_id,
         pre_grasp,
         qpos_ids,
         dof_ids,
+        label="PRE-GRASP",
     )
+
+    if not above_ok:
+        raise RuntimeError(
+            "Above-stone target is not reachable. "
+            "Execution stopped."
+        )
+
+    if not pregrasp_ok:
+        raise RuntimeError(
+            "Pre-grasp target is not reachable. "
+            "Execution stopped."
+        )
 
     print(
         "Pre-grasp joint target:",
