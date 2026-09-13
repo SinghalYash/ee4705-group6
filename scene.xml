@@ -61,6 +61,13 @@
 
               <body name="gripper_base" pos="0.08 0 0">
                 <geom type="box" size="0.02 0.05 0.02" rgba="0.2 0.2 0.2 1"/>
+      
+       <!-- End-effector reference point for inverse kinematics; make invisible after testing --> 
+                <site name="gripper_site"
+                      pos="0.03 0 0"
+                      size="0.008"
+                      rgba="1 0 1 1"/>
+
                 <body name="finger_left" pos="0 0.03 0">
                   <joint name="finger_left_joint" type="slide" axis="0 1 0" range="0 0.04" damping="5" armature="0.01"/>
                   <geom type="box" size="0.01 0.01 0.03" rgba="0.1 0.1 0.1 1" friction="1.5 0.5 0.1"/>
