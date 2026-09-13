@@ -64,7 +64,7 @@
       
        <!-- End-effector reference point for inverse kinematics; make invisible after testing --> 
                 <site name="gripper_site"
-                      pos="0.03 0 0"
+                      pos="0 0 0"
                       size="0.008"
                       rgba="1 0 1 1"/>
 
