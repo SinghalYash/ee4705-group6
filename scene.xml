@@ -46,7 +46,19 @@
             <body name="wrist" pos="0.2 0 0">
               <joint name="wrist_pitch" type="hinge" axis="0 1 0" range="-90 90" damping="1" armature="0.02"/>
               <geom type="capsule" fromto="0 0 0 0.05 0 0" size="0.02" rgba="0.5 0.5 0.5 1"/>
-              <camera name="wrist_cam" pos="0.08 0 0.04" euler="0 90 0" fovy="60"/>
+             
+              <camera name="wrist_cam"
+                    mode="targetbody"
+                    target="wrist_camera_target"
+                    pos="0.08 0 0.08"
+                    fovy="75"/>           
+            <!-- Invisible point that the wrist camera looks towards -->
+              <body name="wrist_camera_target" pos="0.30 0 -0.25">
+                  <geom type="sphere"
+                        size="0.005"
+                        rgba="1 1 1 0"/>
+              </body>
+
               <body name="gripper_base" pos="0.08 0 0">
                 <geom type="box" size="0.02 0.05 0.02" rgba="0.2 0.2 0.2 1"/>
                 <body name="finger_left" pos="0 0.03 0">
