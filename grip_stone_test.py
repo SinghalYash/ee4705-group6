@@ -253,15 +253,15 @@ def close_gripper_until_contact(
     right_finger,
     actuator_ids,
     joint_commands,
-    duration=3.0,
+    duration=4.0,
 ):
     """
-    Gradually close both fingers.
+    Slowly close the gripper.
 
-    A grasp is accepted only if:
-      1. both fingers contact the stone,
-      2. bilateral contact remains stable for multiple steps,
-      3. the stone remains near the grasp site.
+    Once bilateral contact is first detected:
+      - stop closing,
+      - hold that finger command,
+      - verify contact remains stable.
     """
 
     print("\n" + "=" * 50)
@@ -282,22 +282,24 @@ def close_gripper_until_contact(
 
     steps = int(duration / model.opt.timestep)
 
-    bilateral_contact_count = 0
-    REQUIRED_CONTACT_STEPS = 50
+    contact_command = None
+
+    # --------------------------------------------------
+    # PHASE A — gradually close until BOTH fingers touch
+    # --------------------------------------------------
 
     for step in range(steps):
 
         if not viewer.is_running():
             return False, GRIPPER_OPEN
 
-        # Hold arm at pre-grasp pose.
+        # Hold arm pose.
         for aid, command in zip(
             actuator_ids,
             joint_commands,
         ):
             data.ctrl[aid] = command
 
-        # Slowly close 0.025 -> 0.0.
         alpha = (step + 1) / steps
 
         finger_command = (
@@ -311,28 +313,10 @@ def close_gripper_until_contact(
 
         mujoco.mj_step(model, data)
         viewer.sync()
-
-        # Update kinematics after physics.
         mujoco.mj_forward(model, data)
 
         # ----------------------------------------------
-        # Measure stone relative to grasp site
-        # ----------------------------------------------
-
-        stone_now = data.xpos[
-            stone_id
-        ].copy()
-
-        grasp_now = data.site_xpos[
-            grasp_site_id
-        ].copy()
-
-        stone_distance = np.linalg.norm(
-            stone_now - grasp_now
-        )
-
-        # ----------------------------------------------
-        # Detect contacts
+        # Determine contacts
         # ----------------------------------------------
 
         left_contact = False
@@ -356,26 +340,33 @@ def close_gripper_until_contact(
 
             pair = {geom1, geom2}
 
-            if pair == {
-                "finger_left_geom",
-                "stone_geom",
-            }:
+            if (
+                "stone_geom" in pair
+                and (
+                    "finger_left_geom" in pair
+                    or "finger_left_pad" in pair
+                )
+            ):
                 left_contact = True
 
-            if pair == {
-                "finger_right_geom",
-                "stone_geom",
-            }:
+            if (
+                "stone_geom" in pair
+                and (
+                    "finger_right_geom" in pair
+                    or "finger_right_pad" in pair
+                )
+            ):
                 right_contact = True
 
-        # ----------------------------------------------
-        # Stable bilateral-contact counter
-        # ----------------------------------------------
+        stone_now = data.xpos[stone_id].copy()
 
-        if left_contact and right_contact:
-            bilateral_contact_count += 1
-        else:
-            bilateral_contact_count = 0
+        grasp_now = data.site_xpos[
+            grasp_site_id
+        ].copy()
+
+        stone_distance = np.linalg.norm(
+            stone_now - grasp_now
+        )
 
         if step % 100 == 0:
             print(
@@ -383,21 +374,174 @@ def close_gripper_until_contact(
                 f"finger={finger_command:.4f} | "
                 f"left={left_contact} | "
                 f"right={right_contact} | "
-                f"stable={bilateral_contact_count} | "
                 f"stone_dist={stone_distance:.4f}"
             )
 
-        # ----------------------------------------------
-        # Abort if sphere escapes
-        # ----------------------------------------------
+        # Stop closing as soon as bilateral contact occurs.
+        if left_contact and right_contact:
 
+            contact_command = finger_command
+
+            print(
+                "\nFIRST BILATERAL CONTACT"
+            )
+
+            print(
+                "Freezing finger command at:",
+                contact_command,
+            )
+
+            break
+
+        # Sphere has clearly escaped.
         if stone_distance > 0.10:
 
             print("\nGRASP ABORTED")
             print(
-                "Stone moved too far from "
-                "the grasp site."
+                "Stone moved too far from grasp site."
             )
+
+            return False, GRIPPER_OPEN
+
+        time.sleep(model.opt.timestep)
+
+    # Never achieved bilateral contact.
+    if contact_command is None:
+
+        print("\nGRASP FAILED")
+        print(
+            "Bilateral contact was never achieved."
+        )
+
+        return False, GRIPPER_OPEN
+
+    # --------------------------------------------------
+    # PHASE B — hold contact command and test stability
+    # --------------------------------------------------
+
+    print("\nChecking grasp stability...")
+
+    # Count how often EACH side contacts the stone.
+    # Contact does not need to occur simultaneously every frame.
+    left_contact_count = 0
+    right_contact_count = 0
+
+    required_contact_count = 30
+    max_stability_steps = 500
+
+    # During the stability test, the stone must remain
+    # close to the centre of the gripper.
+    MAX_STABLE_DISTANCE = 0.025
+
+
+    for step in range(max_stability_steps):
+
+        if not viewer.is_running():
+            return False, GRIPPER_OPEN
+
+        # Hold arm.
+        for aid, command in zip(
+            actuator_ids,
+            joint_commands,
+        ):
+            data.ctrl[aid] = command
+
+        # IMPORTANT:
+        # Do NOT continue closing.
+        data.ctrl[left_finger] = contact_command
+        data.ctrl[right_finger] = contact_command
+
+        mujoco.mj_step(model, data)
+        viewer.sync()
+        mujoco.mj_forward(model, data)
+
+        left_contact = False
+        right_contact = False
+
+        for i in range(data.ncon):
+
+            contact = data.contact[i]
+
+            geom1 = mujoco.mj_id2name(
+                model,
+                mujoco.mjtObj.mjOBJ_GEOM,
+                contact.geom1,
+            )
+
+            geom2 = mujoco.mj_id2name(
+                model,
+                mujoco.mjtObj.mjOBJ_GEOM,
+                contact.geom2,
+            )
+
+            pair = {geom1, geom2}
+
+            if (
+                "stone_geom" in pair
+                and (
+                    "finger_left_geom" in pair
+                    or "finger_left_pad" in pair
+                )
+            ):
+                left_contact = True
+
+            if (
+                "stone_geom" in pair
+                and (
+                    "finger_right_geom" in pair
+                    or "finger_right_pad" in pair
+                )
+            ):
+                right_contact = True
+
+        stone_now = data.xpos[
+            stone_id
+        ].copy()
+
+        grasp_now = data.site_xpos[
+            grasp_site_id
+        ].copy()
+
+        stone_distance = np.linalg.norm(
+            stone_now - grasp_now
+        )
+
+        # Record contact samples independently.
+        if left_contact:
+            left_contact_count += 1
+
+        if right_contact:
+            right_contact_count += 1
+            
+        if step % 25 == 0:
+            print(
+                f"stability {step:3d} | "
+                f"left={left_contact} | "
+                f"right={right_contact} | "
+                f"left_count={left_contact_count} | "
+                f"right_count={right_contact_count} | "
+                f"stone_dist={stone_distance:.4f}"
+            )
+
+        if stone_distance > 0.10:
+
+            print("\nGRASP FAILED")
+            print(
+                "Stone escaped during stability test."
+            )
+
+            return False, GRIPPER_OPEN
+
+        # The stone has not completely escaped, but it has
+        # moved too far away to count as a stable grasp.
+        if stone_distance > MAX_STABLE_DISTANCE:
+
+            print("\nGRASP FAILED")
+            print(
+                "Stone moved outside the stable "
+                "grasp region."
+            )
+
             print(
                 "Stone distance:",
                 stone_distance,
@@ -405,22 +549,29 @@ def close_gripper_until_contact(
 
             return False, GRIPPER_OPEN
 
-        # ----------------------------------------------
-        # Accept only sustained bilateral contact
-        # ----------------------------------------------
-
         if (
-            bilateral_contact_count
-            >= REQUIRED_CONTACT_STEPS
+            left_contact_count >= required_contact_count
+            and right_contact_count >= required_contact_count
+            and stone_distance < MAX_STABLE_DISTANCE
         ):
 
             print(
-                "\nSTABLE BILATERAL CONTACT DETECTED"
+                "\nSTABLE GRASP CONFIRMED"
             )
 
             print(
                 "Finger command:",
-                finger_command,
+                contact_command,
+            )
+
+            print(
+                "Left contact samples:",
+                left_contact_count,
+            )
+
+            print(
+                "Right contact samples:",
+                right_contact_count,
             )
 
             print(
@@ -428,40 +579,7 @@ def close_gripper_until_contact(
                 stone_distance,
             )
 
-            # Hold grasp to see whether it remains stable.
-            for _ in range(500):
-
-                for aid, command in zip(
-                    actuator_ids,
-                    joint_commands,
-                ):
-                    data.ctrl[aid] = command
-
-                data.ctrl[left_finger] = (
-                    finger_command
-                )
-
-                data.ctrl[right_finger] = (
-                    finger_command
-                )
-
-                mujoco.mj_step(
-                    model,
-                    data,
-                )
-
-                viewer.sync()
-
-            return True, finger_command
-
-        time.sleep(model.opt.timestep)
-
-    print("\nGRASP FAILED")
-    print(
-        "Stable bilateral contact was not achieved."
-    )
-
-    return False, GRIPPER_OPEN
+            return True, contact_command
 
 def main():
 

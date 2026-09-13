@@ -23,7 +23,12 @@
     <!-- Task-relevant objects (free-floating so they can be picked up) -->
     <body name="stone" pos="0.28 -0.18 0.05">
       <freejoint/>
-      <geom name="stone_geom" type="sphere" size="0.04" rgba="0.5 0.5 0.5 1" mass="0.05" friction="1 0.5 0.1"/>
+      <geom name="stone_geom"
+            type="sphere"
+            size="0.04"
+            rgba="0.5 0.5 0.5 1"
+            mass="0.05"
+            friction="3 0.5 1"/>
     </body>
 
     <body name="box_obj" pos="0.32 -0.08 0.04">      <freejoint/>
@@ -123,6 +128,12 @@
                         size="0.05 0.01 0.015"
                         rgba="0.1 0.1 0.1 1"
                         friction="2 0.5 0.1"/>
+                 <geom name="finger_left_pad"
+                        type="sphere"
+                        pos="0.035 -0.010 0"
+                        size="0.014"
+                        rgba="0.15 0.15 0.15 1"
+                        friction="3.0 1.0 0.5"/>
 
                 </body>
 
@@ -141,6 +152,13 @@
                         size="0.05 0.01 0.015"
                         rgba="0.1 0.1 0.1 1"
                         friction="2 0.5 0.1"/>
+                  
+                  <geom name="finger_right_pad"
+                        type="sphere"
+                        pos="0.035 0.010 0"
+                        size="0.014"
+                        rgba="0.15 0.15 0.15 1"
+                        friction="3.0 1.0 0.5"/>
 
                 </body>
 
