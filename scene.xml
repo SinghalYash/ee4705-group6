@@ -13,19 +13,24 @@
     <geom name="floor" type="plane" size="2 2 0.1" material="grid"/>
 
     <!-- Target area: flat red disc on the floor -->
-    <geom name="target_area" type="cylinder" pos="0.5 0.5 0.001" size="0.15 0.001" rgba="1 0 0 0.5" contype="0" conaffinity="0"/>
-
+   <geom name="target_area"
+         type="cylinder"
+         pos="0.25 0.20 0.001"
+         size="0.12 0.001"
+         rgba="1 0 0 0.5"
+         contype="0"
+         conaffinity="0"/>
     <!-- Task-relevant objects (free-floating so they can be picked up) -->
-    <body name="stone" pos="0.4 -0.3 0.05">
+    <body name="stone" pos="0.28 -0.18 0.05">
       <freejoint/>
       <geom name="stone_geom" type="sphere" size="0.04" rgba="0.5 0.5 0.5 1" mass="0.05" friction="1 0.5 0.1"/>
     </body>
 
-    <body name="box_obj" pos="0.2 0.35 0.04">      <freejoint/>
+    <body name="box_obj" pos="0.32 -0.08 0.04">      <freejoint/>
       <geom name="box_geom" type="box" size="0.04 0.04 0.04" rgba="0 0 1 1" mass="0.05" friction="1 0.5 0.1"/>
     </body>
 
-    <body name="cylinder_obj" pos="0.3 0.1 0.05">
+    <body name="cylinder_obj" pos="0.30 0.08 0.05">
       <freejoint/>
       <geom name="cylinder_geom" type="cylinder" size="0.03 0.05" rgba="0 1 0 1" mass="0.05" friction="1 0.5 0.1"/>
     </body>
