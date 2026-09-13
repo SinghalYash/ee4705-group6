@@ -21,6 +21,9 @@ ARM_ACTUATORS = [
 ]
 
 GRIPPER_OPEN = 0.025
+GRIPPER_CLOSED = 0.0
+
+STONE_RADIUS = 0.04
 
 # Cartesian controller settings
 POSITION_TOLERANCE = 0.01   # 1 cm
@@ -330,8 +333,8 @@ def main():
     # Stage 1:
     # Move to a high, unobstructed location.
     safe_target = np.array([
-        0.30,
-        -0.20,
+        0.22,
+        -0.12,
         0.32,
     ])
 
@@ -351,9 +354,16 @@ def main():
         0.20,
     ])
 
+    pregrasp_target = np.array([
+        stone_pos[0],
+        stone_pos[1],
+        stone_pos[2] + 0.02,
+    ])
+
     print("Safe target:", safe_target)
     print("Above-stone target:", above_stone)
     print("Approach target:", approach_target)
+    print("Pre-grasp target:", pregrasp_target)
 
     # Start commands from actual physical joint positions.
     joint_commands = np.array([
@@ -394,10 +404,7 @@ def main():
         )
 
         if not ok:
-            print(
-                "\nStopping: could not reach "
-                "safe pose."
-            )
+            print("\nStopping: could not reach safe pose.")
 
         else:
 
@@ -421,7 +428,6 @@ def main():
             )
 
             if not ok:
-
                 print(
                     "\nStopping: could not reach "
                     "above-stone pose."
@@ -454,9 +460,9 @@ def main():
                     )
 
                 else:
+
                     print(
-                        "\n"
-                        "================================="
+                        "\n================================="
                     )
                     print(
                         "APPROACH SEQUENCE SUCCESSFUL"
@@ -465,63 +471,90 @@ def main():
                         "================================="
                     )
 
-        # --------------------------------------------------
-        # Final diagnostics
-        # --------------------------------------------------
+                    # ======================================
+                    # STAGE 4 — PRE-GRASP
+                    # ======================================
 
-        mujoco.mj_forward(
-            model,
-            data,
-        )
+                    joint_commands, ok = move_cartesian(
+                        model,
+                        data,
+                        viewer,
+                        grasp_site_id,
+                        pregrasp_target,
+                        qpos_ids,
+                        dof_ids,
+                        actuator_ids,
+                        left_finger,
+                        right_finger,
+                        joint_commands,
+                        label="STAGE 4: PRE-GRASP",
+                        tolerance=0.008,
+                        max_steps=3000,
+                    )
 
-        final_pos = data.site_xpos[
-            grasp_site_id
-        ].copy()
+                    if not ok:
 
-        current_stone_pos = data.xpos[
-            stone_id
-        ].copy()
+                        print(
+                            "\nStopping: could not reach "
+                            "pre-grasp position."
+                        )
 
-        print(
-            "\n--- FINAL PHYSICAL RESULT ---"
-        )
+                    else:
 
-        print(
-            "Stone:",
-            current_stone_pos,
-        )
+                        print(
+                            "\n================================="
+                        )
+                        print(
+                            "PRE-GRASP POSITION REACHED"
+                        )
+                        print(
+                            "================================="
+                        )
 
-        print(
-            "Grasp site:",
-            final_pos,
-        )
+                        # ================================
+                        # PRE-GRASP DIAGNOSTICS
+                        # ================================
 
-        print(
-            "Distance from approach target:",
-            np.linalg.norm(
-                approach_target
-                - final_pos
-            ),
-        )
+                        mujoco.mj_forward(
+                            model,
+                            data,
+                        )
 
-        print(
-            "\nFinal joint positions:"
-        )
+                        grasp_pos = data.site_xpos[
+                            grasp_site_id
+                        ].copy()
 
-        for name, qid in zip(
-            ARM_JOINTS,
-            qpos_ids,
-        ):
+                        stone_now = data.xpos[
+                            stone_id
+                        ].copy()
 
-            print(
-                name,
-                "=",
-                data.qpos[qid],
-            )
+                        grasp_to_stone = np.linalg.norm(
+                            grasp_pos - stone_now
+                        )
 
-        # --------------------------------------------------
-        # Hold final configuration for inspection
-        # --------------------------------------------------
+                        print(
+                            "\n--- PRE-GRASP CHECK ---"
+                        )
+
+                        print(
+                            "Stone centre:",
+                            stone_now,
+                        )
+
+                        print(
+                            "Grasp site:",
+                            grasp_pos,
+                        )
+
+                        print(
+                            "Distance grasp-site "
+                            "to stone:",
+                            grasp_to_stone,
+                        )
+
+        # ==================================================
+        # HOLD FINAL CONFIGURATION
+        # ==================================================
 
         while viewer.is_running():
 
@@ -531,6 +564,9 @@ def main():
             ):
                 data.ctrl[aid] = command
 
+            # IMPORTANT:
+            # Still keep the fingers open.
+            # We are only inspecting pre-grasp.
             data.ctrl[left_finger] = GRIPPER_OPEN
             data.ctrl[right_finger] = GRIPPER_OPEN
 
@@ -544,7 +580,6 @@ def main():
             time.sleep(
                 model.opt.timestep
             )
-
 
 if __name__ == "__main__":
     main()
