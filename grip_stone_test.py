@@ -245,6 +245,134 @@ def move_cartesian(
 
     return joint_commands, False
 
+def close_gripper_until_contact(
+    model,
+    data,
+    viewer,
+    left_finger,
+    right_finger,
+    actuator_ids,
+    joint_commands,
+    duration=3.0,
+):
+    """
+    Gradually close both fingers and detect contact
+    between each finger and the stone.
+    """
+
+    print("\n" + "=" * 50)
+    print("STAGE 5: GRASP")
+    print("=" * 50)
+
+    steps = int(duration / model.opt.timestep)
+
+    for step in range(steps):
+
+        if not viewer.is_running():
+            return False, GRIPPER_OPEN
+
+        # Hold the arm at the successful pre-grasp pose.
+        for aid, command in zip(
+            actuator_ids,
+            joint_commands,
+        ):
+            data.ctrl[aid] = command
+
+        # Gradually close from 0.025 -> 0.0
+        alpha = (step + 1) / steps
+
+        finger_command = (
+            GRIPPER_OPEN
+            + alpha
+            * (GRIPPER_CLOSED - GRIPPER_OPEN)
+        )
+
+        data.ctrl[left_finger] = finger_command
+        data.ctrl[right_finger] = finger_command
+
+        mujoco.mj_step(model, data)
+        viewer.sync()
+
+        # ----------------------------------------------
+        # Detect finger/stone contacts
+        # ----------------------------------------------
+
+        left_contact = False
+        right_contact = False
+
+        for i in range(data.ncon):
+
+            contact = data.contact[i]
+
+            geom1 = mujoco.mj_id2name(
+                model,
+                mujoco.mjtObj.mjOBJ_GEOM,
+                contact.geom1,
+            )
+
+            geom2 = mujoco.mj_id2name(
+                model,
+                mujoco.mjtObj.mjOBJ_GEOM,
+                contact.geom2,
+            )
+
+            pair = {geom1, geom2}
+
+            if pair == {
+                "finger_left_geom",
+                "stone_geom",
+            }:
+                left_contact = True
+
+            if pair == {
+                "finger_right_geom",
+                "stone_geom",
+            }:
+                right_contact = True
+
+        if step % 100 == 0:
+            print(
+                f"step {step:4d} | "
+                f"finger={finger_command:.4f} | "
+                f"left={left_contact} | "
+                f"right={right_contact}"
+            )
+
+        # Both fingers are touching the stone.
+        if left_contact and right_contact:
+
+            print("\nBILATERAL CONTACT DETECTED")
+            print(
+                "Finger command:",
+                finger_command,
+            )
+
+            # Let the grasp settle while maintaining
+            # the same arm pose and finger command.
+            for _ in range(500):
+
+                for aid, command in zip(
+                    actuator_ids,
+                    joint_commands,
+                ):
+                    data.ctrl[aid] = command
+
+                data.ctrl[left_finger] = finger_command
+                data.ctrl[right_finger] = finger_command
+
+                mujoco.mj_step(model, data)
+                viewer.sync()
+
+            return True, finger_command
+
+        time.sleep(model.opt.timestep)
+
+    print("\nGRASP FAILED")
+    print(
+        "Both fingers did not contact the stone."
+    )
+
+    return False, GRIPPER_OPEN
 
 def main():
 
@@ -370,6 +498,9 @@ def main():
         data.qpos[qid]
         for qid in qpos_ids
     ])
+
+    final_gripper_command = GRIPPER_OPEN
+    grasp_ok = False    
 
     # ------------------------------------------------------
     # Start simulation
@@ -552,6 +683,40 @@ def main():
                             grasp_to_stone,
                         )
 
+                    # ======================================
+                    # STAGE 5 — GRASP
+                    # ======================================
+
+                        grasp_ok, final_gripper_command = (
+                            close_gripper_until_contact(
+                                model,
+                                data,
+                                viewer,
+                                left_finger,
+                                right_finger,
+                                actuator_ids,
+                                joint_commands,
+                            )
+                        )
+
+                        if grasp_ok:
+
+                            print(
+                                "\n================================="
+                            )
+                            print(
+                                "GRASP CONTACT SUCCESSFUL"
+                            )
+                            print(
+                                "================================="
+                            )
+
+                        else:
+
+                            print(
+                                "\nStopping: grasp failed."
+                            )
+
         # ==================================================
         # HOLD FINAL CONFIGURATION
         # ==================================================
@@ -564,11 +729,11 @@ def main():
             ):
                 data.ctrl[aid] = command
 
-            # IMPORTANT:
-            # Still keep the fingers open.
-            # We are only inspecting pre-grasp.
-            data.ctrl[left_finger] = GRIPPER_OPEN
-            data.ctrl[right_finger] = GRIPPER_OPEN
+            # Hold the final gripper position.
+            # If grasp succeeded, this keeps gripping the stone.
+            # If grasp failed/not attempted, this remains GRIPPER_OPEN.
+            data.ctrl[left_finger] = final_gripper_command
+            data.ctrl[right_finger] = final_gripper_command
 
             mujoco.mj_step(
                 model,
