@@ -48,9 +48,10 @@
            dir="0 0 -1"/>
 
     <geom name="floor"
-          type="plane"
-          size="2 2 0.1"
-          material="grid"/>
+      type="plane"
+      size="2 2 0.1"
+      material="grid"
+      friction="10 2 1"/>
 
 
     <!-- ================================================= -->
@@ -88,16 +89,16 @@
 
     <!-- Blue box -->
     <body name="box_obj"
-          pos="0.32 -0.08 0.04">
+          pos="0.32 -0.08 0.03">
 
       <freejoint/>
 
       <geom name="box_geom"
-            type="box"
-            size="0.04 0.04 0.04"
-            rgba="0 0 1 1"
-            mass="0.05"
-            friction="1 0.5 0.1"/>
+        type="box"
+        size="0.03 0.03 0.03"
+        rgba="0 0 1 1"
+        mass="0.05"
+        friction="10 2 1"/>
 
     </body>
 
