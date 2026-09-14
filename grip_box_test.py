@@ -42,8 +42,8 @@ FINGER_GEOMS = [
 # GRIPPER SETTINGS
 # ==========================================================
 
-# q = 0.025 -> open
-# q = 0.0   -> closed
+# q = 0.025 -> fully open
+# q = 0.0   -> fully closed
 GRIPPER_OPEN = 0.025
 GRIPPER_CLOSED = 0.0
 
@@ -53,13 +53,23 @@ GRIPPER_CLOSED = 0.0
 # ==========================================================
 
 POSITION_TOLERANCE = 0.01
-
-# Maximum change in commanded joint position
-# per Cartesian-control iteration.
 MAX_DQ = 0.004
-
-# Damped least-squares regularisation.
 DAMPING = 0.08
+
+
+# ==========================================================
+# OBJECT / TARGET SETTINGS
+# ==========================================================
+
+# Blue box is 6 cm x 6 cm x 6 cm.
+BOX_HALF_HEIGHT = 0.03
+BOX_HALF_WIDTH = 0.03
+
+# Red target radius from scene.xml.
+TARGET_RADIUS = 0.12
+
+# Release box slightly above the floor.
+RELEASE_CLEARANCE = 0.008
 
 
 # ==========================================================
@@ -68,12 +78,10 @@ DAMPING = 0.08
 
 def get_finger_contacts(model, data):
     """
-    Return contact state for the three gripper fingers.
+    Return contact state of the three fingers with box_geom.
 
     Example:
         [True, False, True]
-
-    means finger 1 and finger 3 are touching box_geom.
     """
 
     contacts = [
@@ -103,7 +111,6 @@ def get_finger_contacts(model, data):
             geom2,
         }
 
-        # Ignore contacts that do not involve the box.
         if "box_geom" not in pair:
             continue
 
@@ -118,7 +125,7 @@ def get_finger_contacts(model, data):
 
 
 # ==========================================================
-# FREE-JOINT HELPER
+# FREE-JOINT HELPERS
 # ==========================================================
 
 def get_freejoint_qpos_address(
@@ -126,8 +133,7 @@ def get_freejoint_qpos_address(
     body_name,
 ):
     """
-    Return the qpos address of the free joint belonging
-    to the specified movable body.
+    Return qpos address for a body's free joint.
     """
 
     body_id = mujoco.mj_name2id(
@@ -150,8 +156,7 @@ def get_freejoint_dof_address(
     body_name,
 ):
     """
-    Return the qvel / DoF address of the free joint
-    belonging to the specified movable body.
+    Return qvel / DoF address for a body's free joint.
     """
 
     body_id = mujoco.mj_name2id(
@@ -170,7 +175,7 @@ def get_freejoint_dof_address(
 
 
 # ==========================================================
-# KINEMATIC CARRY HELPER
+# KINEMATIC CARRY
 # ==========================================================
 
 def update_carried_object(
@@ -182,13 +187,9 @@ def update_carried_object(
     object_offset,
 ):
     """
-    Keep the carried object's centre at a fixed XYZ offset
-    from grasp_site.
+    Keep the box at the same XYZ offset from grasp_site.
 
-    This is activated only AFTER Stage 5 has physically
-    detected a stable grasp.
-
-    The object's orientation is left unchanged.
+    Used only AFTER Stage 5 confirms a stable grasp.
     """
 
     mujoco.mj_forward(
@@ -205,17 +206,16 @@ def update_carried_object(
         + object_offset
     )
 
-    # Free-joint qpos layout:
-    #
+    # Free-joint qpos:
     # [x, y, z, qw, qx, qy, qz]
     #
-    # Only overwrite XYZ.
+    # Change XYZ only and preserve orientation.
     data.qpos[
         object_qpos_adr:
         object_qpos_adr + 3
     ] = desired_object_position
 
-    # Remove residual linear and angular velocity.
+    # Remove residual linear/angular velocity.
     data.qvel[
         object_dof_adr:
         object_dof_adr + 6
@@ -252,12 +252,11 @@ def move_cartesian(
     object_offset=None,
 ):
     """
-    Move grasp_site toward target_pos using damped
-    least-squares Jacobian control.
+    Move grasp_site toward a Cartesian target using
+    damped least-squares Jacobian control.
 
-    If carry_object=True, the object is kinematically kept
-    at its recorded offset from grasp_site after every
-    physics step.
+    carry_object=True makes a successfully grasped box
+    follow grasp_site during transport.
     """
 
     print(
@@ -265,6 +264,7 @@ def move_cartesian(
     )
 
     print(label)
+
     print(
         "Target:",
         target_pos,
@@ -358,14 +358,13 @@ def move_cartesian(
             site_id,
         )
 
-        # Only use the four arm DoFs.
         J = jacp[
             :,
             dof_ids,
         ]
 
         # --------------------------------------------------
-        # Damped least-squares IK correction
+        # Damped least-squares IK
         # --------------------------------------------------
 
         dq = (
@@ -387,7 +386,7 @@ def move_cartesian(
         joint_commands += dq
 
         # --------------------------------------------------
-        # Respect joint limits
+        # Joint limits
         # --------------------------------------------------
 
         for i, joint_name in enumerate(
@@ -421,7 +420,7 @@ def move_cartesian(
                 )
 
         # --------------------------------------------------
-        # Send arm commands
+        # Arm commands
         # --------------------------------------------------
 
         for actuator_id, command in zip(
@@ -434,7 +433,7 @@ def move_cartesian(
             ] = command
 
         # --------------------------------------------------
-        # Maintain requested gripper opening
+        # Gripper command
         # --------------------------------------------------
 
         for finger_id in finger_ids:
@@ -454,8 +453,6 @@ def move_cartesian(
                 data,
             )
 
-            # During Stage 6+, force the successfully
-            # grasped box to follow the gripper.
             if carry_object:
 
                 update_carried_object(
@@ -487,7 +484,7 @@ def move_cartesian(
         )
 
     # ------------------------------------------------------
-    # Failed to converge
+    # Failed
     # ------------------------------------------------------
 
     mujoco.mj_forward(
@@ -526,7 +523,7 @@ def move_cartesian(
 
 
 # ==========================================================
-# STAGE 5 — CLOSE GRIPPER
+# STAGE 5 — GRASP
 # ==========================================================
 
 def close_gripper_until_contact(
@@ -543,11 +540,11 @@ def close_gripper_until_contact(
     """
     Slowly close all three fingers.
 
-    Stop closing immediately once:
+    Stop when:
       - at least two fingers contact the box, and
-      - the box remains close to grasp_site.
+      - the box is within 3 cm of grasp_site.
 
-    Then hold the finger command and verify stability.
+    Then verify stable contact.
     """
 
     print(
@@ -574,7 +571,7 @@ def close_gripper_until_contact(
     )
 
     # ======================================================
-    # PHASE A — CLOSE UNTIL USEFUL CAPTURE
+    # PHASE A — CLOSE
     # ======================================================
 
     for step in range(
@@ -588,7 +585,7 @@ def close_gripper_until_contact(
                 GRIPPER_OPEN,
             )
 
-        # Hold arm at pre-grasp pose.
+        # Hold arm.
         for actuator_id, command in zip(
             actuator_ids,
             joint_commands,
@@ -598,10 +595,7 @@ def close_gripper_until_contact(
                 actuator_id
             ] = command
 
-        # --------------------------------------------------
-        # Slowly close 0.025 -> 0
-        # --------------------------------------------------
-
+        # Slowly close.
         alpha = (
             step + 1
         ) / total_steps
@@ -633,10 +627,6 @@ def close_gripper_until_contact(
             data,
         )
 
-        # --------------------------------------------------
-        # Contact state
-        # --------------------------------------------------
-
         contacts = get_finger_contacts(
             model,
             data,
@@ -645,10 +635,6 @@ def close_gripper_until_contact(
         number_contacts = sum(
             contacts
         )
-
-        # --------------------------------------------------
-        # Box position relative to grasp site
-        # --------------------------------------------------
 
         object_now = data.xpos[
             object_id
@@ -663,10 +649,6 @@ def close_gripper_until_contact(
             - grasp_now
         )
 
-        # --------------------------------------------------
-        # Diagnostics
-        # --------------------------------------------------
-
         if step % 100 == 0:
 
             print(
@@ -674,13 +656,11 @@ def close_gripper_until_contact(
                 f"finger={finger_command:.4f} | "
                 f"contacts={contacts} | "
                 f"n={number_contacts} | "
-                f"object_dist={object_distance:.4f}"
+                f"object_dist="
+                f"{object_distance:.4f}"
             )
 
-        # --------------------------------------------------
-        # Capture
-        # --------------------------------------------------
-
+        # Stop squeezing immediately at useful capture.
         if (
             number_contacts >= 2
             and object_distance < 0.030
@@ -711,10 +691,6 @@ def close_gripper_until_contact(
 
             break
 
-        # --------------------------------------------------
-        # Failure
-        # --------------------------------------------------
-
         if object_distance > 0.10:
 
             print(
@@ -732,10 +708,6 @@ def close_gripper_until_contact(
             model.opt.timestep
         )
 
-    # ------------------------------------------------------
-    # No capture occurred
-    # ------------------------------------------------------
-
     if contact_command is None:
 
         print(
@@ -749,7 +721,7 @@ def close_gripper_until_contact(
         )
 
     # ======================================================
-    # PHASE B — STABILITY TEST
+    # PHASE B — STABILITY
     # ======================================================
 
     print(
@@ -787,7 +759,7 @@ def close_gripper_until_contact(
                 actuator_id
             ] = command
 
-        # Hold fingers at captured spacing.
+        # Hold captured finger spacing.
         for finger_id in finger_ids:
 
             data.ctrl[
@@ -806,10 +778,6 @@ def close_gripper_until_contact(
             data,
         )
 
-        # --------------------------------------------------
-        # Contact statistics
-        # --------------------------------------------------
-
         contacts = get_finger_contacts(
             model,
             data,
@@ -821,10 +789,6 @@ def close_gripper_until_contact(
 
             if touching:
                 contact_counts[i] += 1
-
-        # --------------------------------------------------
-        # Object position
-        # --------------------------------------------------
 
         object_now = data.xpos[
             object_id
@@ -839,22 +803,15 @@ def close_gripper_until_contact(
             - grasp_now
         )
 
-        # --------------------------------------------------
-        # Diagnostics
-        # --------------------------------------------------
-
         if step % 25 == 0:
 
             print(
                 f"stability {step:3d} | "
                 f"contacts={contacts} | "
                 f"counts={contact_counts} | "
-                f"object_dist={object_distance:.4f}"
+                f"object_dist="
+                f"{object_distance:.4f}"
             )
-
-        # --------------------------------------------------
-        # Failure
-        # --------------------------------------------------
 
         if (
             object_distance
@@ -871,10 +828,6 @@ def close_gripper_until_contact(
                 False,
                 GRIPPER_OPEN,
             )
-
-        # --------------------------------------------------
-        # Success
-        # --------------------------------------------------
 
         successful_prongs = sum(
             count
@@ -918,11 +871,6 @@ def close_gripper_until_contact(
         "insufficient stable contact."
     )
 
-    print(
-        "Contact samples:",
-        contact_counts,
-    )
-
     return (
         False,
         GRIPPER_OPEN,
@@ -934,10 +882,6 @@ def close_gripper_until_contact(
 # ==========================================================
 
 def main():
-
-    # ------------------------------------------------------
-    # Load MuJoCo model
-    # ------------------------------------------------------
 
     model = mujoco.MjModel.from_xml_path(
         MODEL_PATH
@@ -973,8 +917,14 @@ def main():
         "box_obj",
     )
 
+    target_geom_id = mujoco.mj_name2id(
+        model,
+        mujoco.mjtObj.mjOBJ_GEOM,
+        "target_area",
+    )
+
     # ------------------------------------------------------
-    # Arm joint addresses
+    # Arm addresses
     # ------------------------------------------------------
 
     qpos_ids = []
@@ -999,10 +949,6 @@ def main():
                 joint_id
             ]
         )
-
-    # ------------------------------------------------------
-    # Actuator IDs
-    # ------------------------------------------------------
 
     actuator_ids = [
         mujoco.mj_name2id(
@@ -1031,17 +977,48 @@ def main():
         data,
     )
 
+    # Save exact initial robot state for Stage 10.
+    initial_grasp_position = (
+        data.site_xpos[
+            grasp_site_id
+        ].copy()
+    )
+
+    initial_joint_positions = np.array([
+        data.qpos[qid]
+        for qid in qpos_ids
+    ])
+
     object_pos = data.xpos[
         object_id
     ].copy()
+
+    target_pos = data.geom_xpos[
+        target_geom_id
+    ].copy()
+
+    print(
+        "Initial grasp-site position:",
+        initial_grasp_position,
+    )
+
+    print(
+        "Initial arm joint positions:",
+        initial_joint_positions,
+    )
 
     print(
         "Box position:",
         object_pos,
     )
 
+    print(
+        "Target area centre:",
+        target_pos,
+    )
+
     # ======================================================
-    # WAYPOINTS
+    # APPROACH WAYPOINTS
     # ======================================================
 
     safe_target = np.array([
@@ -1062,37 +1039,11 @@ def main():
         0.22,
     ])
 
-    # Slightly above box centre to give the lower
-    # third prong floor clearance.
     pregrasp_target = np.array([
         object_pos[0],
         object_pos[1],
         object_pos[2] + 0.025,
     ])
-
-    print(
-        "Safe target:",
-        safe_target,
-    )
-
-    print(
-        "Above-box target:",
-        above_box,
-    )
-
-    print(
-        "Approach target:",
-        approach_target,
-    )
-
-    print(
-        "Pre-grasp target:",
-        pregrasp_target,
-    )
-
-    # ------------------------------------------------------
-    # Initial arm command
-    # ------------------------------------------------------
 
     joint_commands = np.array([
         data.qpos[qid]
@@ -1112,7 +1063,7 @@ def main():
         data,
     ) as viewer:
 
-        # Start fully open.
+        # Start open.
         for finger_id in finger_ids:
 
             data.ctrl[
@@ -1120,7 +1071,7 @@ def main():
             ] = GRIPPER_OPEN
 
         # ==================================================
-        # STAGES 1–4
+        # STAGES 1–4 — APPROACH
         # ==================================================
 
         stages = [
@@ -1159,35 +1110,36 @@ def main():
             max_steps,
         ) in stages:
 
-            joint_commands, ok = (
-                move_cartesian(
-                    model,
-                    data,
-                    viewer,
-                    grasp_site_id,
-                    target,
-                    qpos_ids,
-                    dof_ids,
-                    actuator_ids,
-                    finger_ids,
-                    joint_commands,
-                    label,
-                    tolerance=tolerance,
-                    max_steps=max_steps,
-                )
+            (
+                joint_commands,
+                ok,
+            ) = move_cartesian(
+                model,
+                data,
+                viewer,
+                grasp_site_id,
+                target,
+                qpos_ids,
+                dof_ids,
+                actuator_ids,
+                finger_ids,
+                joint_commands,
+                label,
+                tolerance=tolerance,
+                max_steps=max_steps,
             )
 
             if not ok:
 
                 print(
                     "\nStopping before grasp "
-                    "because a movement stage failed."
+                    "because movement failed."
                 )
 
                 break
 
         # ==================================================
-        # STAGE 5
+        # STAGE 5 — GRASP
         # ==================================================
 
         if ok:
@@ -1197,34 +1149,22 @@ def main():
                 data,
             )
 
-            grasp_pos = data.site_xpos[
-                grasp_site_id
-            ].copy()
-
-            object_now = data.xpos[
-                object_id
-            ].copy()
-
             print(
                 "\n--- PRE-GRASP CHECK ---"
             )
 
             print(
                 "Box centre:",
-                object_now,
+                data.xpos[
+                    object_id
+                ].copy(),
             )
 
             print(
                 "Grasp site:",
-                grasp_pos,
-            )
-
-            print(
-                "Distance grasp-site to box:",
-                np.linalg.norm(
-                    grasp_pos
-                    - object_now
-                ),
+                data.site_xpos[
+                    grasp_site_id
+                ].copy(),
             )
 
             (
@@ -1252,28 +1192,12 @@ def main():
                 )
 
                 print(
-                    "GRASP CONTACT SUCCESSFUL"
-                )
-
-                print(
-                    "================================="
-                )
-
-                print(
-                    "\n================================="
-                )
-
-                print(
                     "STAGE 6: LIFT BOX"
                 )
 
                 print(
                     "================================="
                 )
-
-                # ------------------------------------------
-                # Record physical grasp state
-                # ------------------------------------------
 
                 mujoco.mj_forward(
                     model,
@@ -1290,30 +1214,10 @@ def main():
                     ].copy()
                 )
 
-                # Preserve current relative XYZ.
                 object_offset = (
                     box_before_lift
                     - grasp_before_lift
                 )
-
-                print(
-                    "Box before lift:",
-                    box_before_lift,
-                )
-
-                print(
-                    "Grasp site before lift:",
-                    grasp_before_lift,
-                )
-
-                print(
-                    "Box/grasp offset:",
-                    object_offset,
-                )
-
-                # ------------------------------------------
-                # Locate box free joint
-                # ------------------------------------------
 
                 object_qpos_adr = (
                     get_freejoint_qpos_address(
@@ -1329,28 +1233,13 @@ def main():
                     )
                 )
 
-                # Everything required for carrying has
-                # now been initialized.
                 carrying_box = True
-
-                # ------------------------------------------
-                # 10 cm vertical lift
-                # ------------------------------------------
 
                 lift_target = (
                     grasp_before_lift.copy()
                 )
 
                 lift_target[2] += 0.10
-
-                print(
-                    "Lift target:",
-                    lift_target,
-                )
-
-                # ------------------------------------------
-                # Perform lift
-                # ------------------------------------------
 
                 (
                     joint_commands,
@@ -1369,13 +1258,9 @@ def main():
                     label="STAGE 6: LIFT",
                     tolerance=0.01,
                     max_steps=3000,
-
-                    # Keep successful finger spacing.
                     gripper_command=(
                         final_gripper_command
                     ),
-
-                    # Make box follow grasp site.
                     carry_object=True,
                     object_qpos_adr=(
                         object_qpos_adr
@@ -1387,10 +1272,6 @@ def main():
                         object_offset
                     ),
                 )
-
-                # ------------------------------------------
-                # Verify physical lift
-                # ------------------------------------------
 
                 mujoco.mj_forward(
                     model,
@@ -1417,65 +1298,37 @@ def main():
                     - grasp_before_lift[2]
                 )
 
-                print(
-                    "\n--- LIFT RESULT ---"
-                )
-
-                print(
-                    "Lift controller success:",
-                    lift_ok,
-                )
-
-                print(
-                    "Box before:",
-                    box_before_lift,
-                )
-
-                print(
-                    "Box after:",
-                    box_after_lift,
-                )
-
-                print(
-                    "Grasp site before:",
-                    grasp_before_lift,
-                )
-
-                print(
-                    "Grasp site after:",
-                    grasp_after_lift,
-                )
-
-                print(
-                    "Box vertical displacement:",
-                    box_lift_amount,
-                    "m",
-                )
-
-                print(
-                    "Gripper vertical displacement:",
-                    gripper_lift_amount,
-                    "m",
-                )
-
-                # Difference between how far the box and
-                # gripper moved should be tiny.
                 lift_tracking_error = abs(
                     box_lift_amount
                     - gripper_lift_amount
                 )
 
                 print(
-                    "Lift tracking difference:",
-                    lift_tracking_error,
-                    "m",
+                    "\n--- LIFT RESULT ---"
                 )
 
-                if (
+                print(
+                    "Box vertical displacement:",
+                    box_lift_amount,
+                )
+
+                print(
+                    "Gripper vertical displacement:",
+                    gripper_lift_amount,
+                )
+
+                print(
+                    "Lift tracking difference:",
+                    lift_tracking_error,
+                )
+
+                lift_verified = (
                     lift_ok
                     and box_lift_amount > 0.07
                     and lift_tracking_error < 0.01
-                ):
+                )
+
+                if lift_verified:
 
                     print(
                         "\n================================="
@@ -1489,25 +1342,764 @@ def main():
                         "================================="
                     )
 
-                else:
+                    # ======================================
+                    # STAGE 7A — CLEARANCE
+                    # ======================================
 
-                    print(
-                        "\n================================="
+                    mujoco.mj_forward(
+                        model,
+                        data,
                     )
 
-                    print(
-                        "BOX LIFT NOT VERIFIED"
+                    current_grasp = (
+                        data.site_xpos[
+                            grasp_site_id
+                        ].copy()
                     )
 
-                    print(
-                        "================================="
+                    transport_height = max(
+                        current_grasp[2],
+                        0.20,
                     )
 
-            else:
+                    clearance_target = np.array([
+                        current_grasp[0],
+                        current_grasp[1],
+                        transport_height,
+                    ])
 
-                print(
-                    "\nStopping: grasp failed."
-                )
+                    (
+                        joint_commands,
+                        clearance_ok,
+                    ) = move_cartesian(
+                        model,
+                        data,
+                        viewer,
+                        grasp_site_id,
+                        clearance_target,
+                        qpos_ids,
+                        dof_ids,
+                        actuator_ids,
+                        finger_ids,
+                        joint_commands,
+                        label=(
+                            "STAGE 7A: CLEARANCE"
+                        ),
+                        tolerance=0.01,
+                        max_steps=2500,
+                        gripper_command=(
+                            final_gripper_command
+                        ),
+                        carry_object=True,
+                        object_qpos_adr=(
+                            object_qpos_adr
+                        ),
+                        object_dof_adr=(
+                            object_dof_adr
+                        ),
+                        object_offset=(
+                            object_offset
+                        ),
+                    )
+
+                    # ======================================
+                    # STAGE 7B — ABOVE TARGET
+                    # ======================================
+
+                    if clearance_ok:
+
+                        above_target = np.array([
+                            target_pos[0],
+                            target_pos[1],
+                            transport_height,
+                        ])
+
+                        (
+                            joint_commands,
+                            transport_ok,
+                        ) = move_cartesian(
+                            model,
+                            data,
+                            viewer,
+                            grasp_site_id,
+                            above_target,
+                            qpos_ids,
+                            dof_ids,
+                            actuator_ids,
+                            finger_ids,
+                            joint_commands,
+                            label=(
+                                "STAGE 7B: "
+                                "TRANSPORT ABOVE TARGET"
+                            ),
+                            tolerance=0.01,
+                            max_steps=3500,
+                            gripper_command=(
+                                final_gripper_command
+                            ),
+                            carry_object=True,
+                            object_qpos_adr=(
+                                object_qpos_adr
+                            ),
+                            object_dof_adr=(
+                                object_dof_adr
+                            ),
+                            object_offset=(
+                                object_offset
+                            ),
+                        )
+
+                    else:
+
+                        transport_ok = False
+
+                    # ======================================
+                    # STAGE 8 — LOWER
+                    # ======================================
+
+                    if transport_ok:
+
+                        print(
+                            "\n================================="
+                        )
+
+                        print(
+                            "STAGE 8: LOWER BOX"
+                        )
+
+                        print(
+                            "================================="
+                        )
+
+                        desired_box_z = (
+                            BOX_HALF_HEIGHT
+                            + RELEASE_CLEARANCE
+                        )
+
+                        desired_grasp_z = (
+                            desired_box_z
+                            - object_offset[2]
+                        )
+
+                        # Correct for XYZ offset so that
+                        # BOX CENTRE lands on target centre.
+                        release_target = np.array([
+                            target_pos[0]
+                            - object_offset[0],
+
+                            target_pos[1]
+                            - object_offset[1],
+
+                            desired_grasp_z,
+                        ])
+
+                        print(
+                            "Release target:",
+                            release_target,
+                        )
+
+                        (
+                            joint_commands,
+                            lower_ok,
+                        ) = move_cartesian(
+                            model,
+                            data,
+                            viewer,
+                            grasp_site_id,
+                            release_target,
+                            qpos_ids,
+                            dof_ids,
+                            actuator_ids,
+                            finger_ids,
+                            joint_commands,
+                            label=(
+                                "STAGE 8: LOWER"
+                            ),
+                            tolerance=0.006,
+                            max_steps=3500,
+                            gripper_command=(
+                                final_gripper_command
+                            ),
+                            carry_object=True,
+                            object_qpos_adr=(
+                                object_qpos_adr
+                            ),
+                            object_dof_adr=(
+                                object_dof_adr
+                            ),
+                            object_offset=(
+                                object_offset
+                            ),
+                        )
+
+                    else:
+
+                        lower_ok = False
+
+                    # ======================================
+                    # STAGE 9 — RELEASE
+                    # ======================================
+
+                    if lower_ok:
+
+                        print(
+                            "\n================================="
+                        )
+
+                        print(
+                            "STAGE 9: RELEASE BOX"
+                        )
+
+                        print(
+                            "================================="
+                        )
+
+                        mujoco.mj_forward(
+                            model,
+                            data,
+                        )
+
+                        print(
+                            "Box before release:",
+                            data.xpos[
+                                object_id
+                            ].copy(),
+                        )
+
+                        # Stop kinematic carrying.
+                        carrying_box = False
+
+                        # Remove residual velocity.
+                        data.qvel[
+                            object_dof_adr:
+                            object_dof_adr + 6
+                        ] = 0.0
+
+                        # ----------------------------------
+                        # Slowly open fingers
+                        # ----------------------------------
+
+                        release_steps = 600
+
+                        for release_step in range(
+                            release_steps
+                        ):
+
+                            if not viewer.is_running():
+                                break
+
+                            alpha = (
+                                release_step + 1
+                            ) / release_steps
+
+                            finger_command = (
+                                final_gripper_command
+                                + alpha
+                                * (
+                                    GRIPPER_OPEN
+                                    - final_gripper_command
+                                )
+                            )
+
+                            # Hold arm.
+                            for (
+                                actuator_id,
+                                command,
+                            ) in zip(
+                                actuator_ids,
+                                joint_commands,
+                            ):
+
+                                data.ctrl[
+                                    actuator_id
+                                ] = command
+
+                            # Open fingers.
+                            for finger_id in finger_ids:
+
+                                data.ctrl[
+                                    finger_id
+                                ] = finger_command
+
+                            mujoco.mj_step(
+                                model,
+                                data,
+                            )
+
+                            viewer.sync()
+
+                            if (
+                                release_step
+                                % 100
+                                == 0
+                            ):
+
+                                mujoco.mj_forward(
+                                    model,
+                                    data,
+                                )
+
+                                print(
+                                    f"release "
+                                    f"{release_step:3d} | "
+                                    f"finger="
+                                    f"{finger_command:.4f} | "
+                                    f"box="
+                                    f"{np.round(data.xpos[object_id], 3)}"
+                                )
+
+                            time.sleep(
+                                model.opt.timestep
+                            )
+
+                        final_gripper_command = (
+                            GRIPPER_OPEN
+                        )
+
+                        # ----------------------------------
+                        # Let box settle
+                        # ----------------------------------
+
+                        print(
+                            "\nAllowing box "
+                            "to settle..."
+                        )
+
+                        settle_steps = 1000
+
+                        for _ in range(
+                            settle_steps
+                        ):
+
+                            if not viewer.is_running():
+                                break
+
+                            for (
+                                actuator_id,
+                                command,
+                            ) in zip(
+                                actuator_ids,
+                                joint_commands,
+                            ):
+
+                                data.ctrl[
+                                    actuator_id
+                                ] = command
+
+                            for finger_id in finger_ids:
+
+                                data.ctrl[
+                                    finger_id
+                                ] = GRIPPER_OPEN
+
+                            mujoco.mj_step(
+                                model,
+                                data,
+                            )
+
+                            viewer.sync()
+
+                            time.sleep(
+                                model.opt.timestep
+                            )
+
+                        # ----------------------------------
+                        # Verify placement
+                        # ----------------------------------
+
+                        mujoco.mj_forward(
+                            model,
+                            data,
+                        )
+
+                        box_final = data.xpos[
+                            object_id
+                        ].copy()
+
+                        target_xy_error = (
+                            np.linalg.norm(
+                                box_final[:2]
+                                - target_pos[:2]
+                            )
+                        )
+
+                        placement_limit = (
+                            TARGET_RADIUS
+                            - BOX_HALF_WIDTH
+                        )
+
+                        print(
+                            "\n--- PLACEMENT RESULT ---"
+                        )
+
+                        print(
+                            "Target centre:",
+                            target_pos,
+                        )
+
+                        print(
+                            "Final box position:",
+                            box_final,
+                        )
+
+                        print(
+                            "XY distance from "
+                            "target centre:",
+                            target_xy_error,
+                            "m",
+                        )
+
+                        print(
+                            "Placement acceptance "
+                            "radius:",
+                            placement_limit,
+                            "m",
+                        )
+
+                        # ==================================
+                        # PLACEMENT SUCCESS
+                        # ==================================
+
+                        if (
+                            target_xy_error
+                            < placement_limit
+                        ):
+
+                            print(
+                                "\n================================="
+                            )
+
+                            print(
+                                "BOX PLACEMENT "
+                                "SUCCESSFUL"
+                            )
+
+                            print(
+                                "================================="
+                            )
+
+                            # ==================================
+                            # STAGE 10 — RETURN HOME
+                            # ==================================
+
+                            print(
+                                "\n================================="
+                            )
+
+                            print(
+                                "STAGE 10: RETURN HOME"
+                            )
+
+                            print(
+                                "================================="
+                            )
+
+                            # ------------------------------
+                            # Stage 10A — RETREAT UPWARD
+                            # ------------------------------
+
+                            mujoco.mj_forward(
+                                model,
+                                data,
+                            )
+
+                            current_grasp = (
+                                data.site_xpos[
+                                    grasp_site_id
+                                ].copy()
+                            )
+
+                            retreat_target = (
+                                current_grasp.copy()
+                            )
+
+                            retreat_target[2] += (
+                                0.15
+                            )
+
+                            print(
+                                "Retreat target:",
+                                retreat_target,
+                            )
+
+                            (
+                                joint_commands,
+                                retreat_ok,
+                            ) = move_cartesian(
+                                model,
+                                data,
+                                viewer,
+                                grasp_site_id,
+                                retreat_target,
+                                qpos_ids,
+                                dof_ids,
+                                actuator_ids,
+                                finger_ids,
+                                joint_commands,
+                                label=(
+                                    "STAGE 10A: "
+                                    "RETREAT"
+                                ),
+                                tolerance=0.01,
+                                max_steps=3000,
+                                gripper_command=(
+                                    GRIPPER_OPEN
+                                ),
+                                carry_object=False,
+                            )
+
+                            # ------------------------------
+                            # Stage 10B —
+                            # Exact initial joint pose
+                            # ------------------------------
+
+                            if retreat_ok:
+
+                                print(
+                                    "\nReturning to exact "
+                                    "initial robot "
+                                    "configuration..."
+                                )
+
+                                return_steps = 1500
+
+                                start_joint_positions = (
+                                    np.array([
+                                        data.qpos[qid]
+                                        for qid
+                                        in qpos_ids
+                                    ])
+                                )
+
+                                for return_step in range(
+                                    return_steps
+                                ):
+
+                                    if not viewer.is_running():
+                                        break
+
+                                    alpha = (
+                                        return_step + 1
+                                    ) / return_steps
+
+                                    home_command = (
+                                        (1.0 - alpha)
+                                        * start_joint_positions
+                                        + alpha
+                                        * initial_joint_positions
+                                    )
+
+                                    for (
+                                        actuator_id,
+                                        command,
+                                    ) in zip(
+                                        actuator_ids,
+                                        home_command,
+                                    ):
+
+                                        data.ctrl[
+                                            actuator_id
+                                        ] = command
+
+                                    # Keep gripper open.
+                                    for finger_id in finger_ids:
+
+                                        data.ctrl[
+                                            finger_id
+                                        ] = GRIPPER_OPEN
+
+                                    mujoco.mj_step(
+                                        model,
+                                        data,
+                                    )
+
+                                    viewer.sync()
+
+                                    if (
+                                        return_step
+                                        % 250
+                                        == 0
+                                    ):
+
+                                        print(
+                                            f"return "
+                                            f"{return_step:4d} | "
+                                            f"q="
+                                            f"{np.round(home_command, 3)}"
+                                        )
+
+                                    time.sleep(
+                                        model.opt.timestep
+                                    )
+
+                                # Make final hold use
+                                # exact initial joint pose.
+                                joint_commands = (
+                                    initial_joint_positions.copy()
+                                )
+
+                                # Allow servo to settle.
+                                for _ in range(500):
+
+                                    if not viewer.is_running():
+                                        break
+
+                                    for (
+                                        actuator_id,
+                                        command,
+                                    ) in zip(
+                                        actuator_ids,
+                                        joint_commands,
+                                    ):
+
+                                        data.ctrl[
+                                            actuator_id
+                                        ] = command
+
+                                    for finger_id in finger_ids:
+
+                                        data.ctrl[
+                                            finger_id
+                                        ] = GRIPPER_OPEN
+
+                                    mujoco.mj_step(
+                                        model,
+                                        data,
+                                    )
+
+                                    viewer.sync()
+
+                                    time.sleep(
+                                        model.opt.timestep
+                                    )
+
+                                home_ok = True
+
+                            else:
+
+                                home_ok = False
+
+                                print(
+                                    "Return-home skipped "
+                                    "because retreat failed."
+                                )
+
+                            # ------------------------------
+                            # Verify home
+                            # ------------------------------
+
+                            if home_ok:
+
+                                mujoco.mj_forward(
+                                    model,
+                                    data,
+                                )
+
+                                final_grasp_position = (
+                                    data.site_xpos[
+                                        grasp_site_id
+                                    ].copy()
+                                )
+
+                                final_joint_positions = (
+                                    np.array([
+                                        data.qpos[qid]
+                                        for qid
+                                        in qpos_ids
+                                    ])
+                                )
+
+                                home_position_error = (
+                                    np.linalg.norm(
+                                        final_grasp_position
+                                        - initial_grasp_position
+                                    )
+                                )
+
+                                home_joint_error = (
+                                    np.linalg.norm(
+                                        final_joint_positions
+                                        - initial_joint_positions
+                                    )
+                                )
+
+                                print(
+                                    "\n--- RETURN HOME RESULT ---"
+                                )
+
+                                print(
+                                    "Initial grasp position:",
+                                    initial_grasp_position,
+                                )
+
+                                print(
+                                    "Final grasp position:",
+                                    final_grasp_position,
+                                )
+
+                                print(
+                                    "Cartesian home error:",
+                                    home_position_error,
+                                    "m",
+                                )
+
+                                print(
+                                    "Initial joint positions:",
+                                    initial_joint_positions,
+                                )
+
+                                print(
+                                    "Final joint positions:",
+                                    final_joint_positions,
+                                )
+
+                                print(
+                                    "Joint-space home error:",
+                                    home_joint_error,
+                                )
+
+                                if (
+                                    home_position_error
+                                    < 0.01
+                                    and home_joint_error
+                                    < 0.05
+                                ):
+
+                                    print(
+                                        "\n"
+                                        "================================="
+                                    )
+
+                                    print(
+                                        "TASK COMPLETE — "
+                                        "ROBOT RETURNED HOME"
+                                    )
+
+                                    print(
+                                        "================================="
+                                    )
+
+                                else:
+
+                                    print(
+                                        "\nRETURN HOME "
+                                        "NOT FULLY VERIFIED"
+                                    )
+
+                        else:
+
+                            print(
+                                "\n================================="
+                            )
+
+                            print(
+                                "BOX PLACEMENT "
+                                "NOT VERIFIED"
+                            )
+
+                            print(
+                                "================================="
+                            )
 
         # ==================================================
         # FINAL HOLD
@@ -1519,7 +2111,7 @@ def main():
 
         while viewer.is_running():
 
-            # Hold arm.
+            # Hold arm at its final command.
             for actuator_id, command in zip(
                 actuator_ids,
                 joint_commands,
@@ -1529,22 +2121,21 @@ def main():
                     actuator_id
                 ] = command
 
-            # Hold gripper.
+            # Hold current gripper command.
             for finger_id in finger_ids:
 
                 data.ctrl[
                     finger_id
                 ] = final_gripper_command
 
-            # Physics.
             mujoco.mj_step(
                 model,
                 data,
             )
 
-            # If Stage 6 succeeded far enough to initialize
-            # carry state, continue holding the box relative
-            # to grasp_site.
+            # If execution stopped during carrying,
+            # continue holding the box relative to
+            # grasp_site.
             if (
                 carrying_box
                 and object_qpos_adr is not None
