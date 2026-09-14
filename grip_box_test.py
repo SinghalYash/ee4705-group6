@@ -38,8 +38,12 @@ FINGER_GEOMS = [
 ]
 
 
-# q = 0      -> closed
-# q = 0.025  -> open
+# ==========================================================
+# GRIPPER SETTINGS
+# ==========================================================
+
+# q = 0.025 -> open
+# q = 0.0   -> closed
 GRIPPER_OPEN = 0.025
 GRIPPER_CLOSED = 0.0
 
@@ -50,7 +54,8 @@ GRIPPER_CLOSED = 0.0
 
 POSITION_TOLERANCE = 0.01
 
-# Maximum joint-command change per Cartesian update.
+# Maximum change in commanded joint position
+# per Cartesian-control iteration.
 MAX_DQ = 0.004
 
 # Damped least-squares regularisation.
@@ -58,19 +63,17 @@ DAMPING = 0.08
 
 
 # ==========================================================
-# HELPER: DETECT PRONG / BOX CONTACTS
+# CONTACT DETECTION
 # ==========================================================
 
 def get_finger_contacts(model, data):
     """
-    Returns a list:
+    Return contact state for the three gripper fingers.
 
-        [finger_1_contact,
-         finger_2_contact,
-         finger_3_contact]
+    Example:
+        [True, False, True]
 
-    Each entry is True if that finger is currently
-    contacting box_geom.
+    means finger 1 and finger 3 are touching box_geom.
     """
 
     contacts = [
@@ -100,25 +103,128 @@ def get_finger_contacts(model, data):
             geom2,
         }
 
-        if (
-            "box_geom" in pair
-            and "finger_1_geom" in pair
-        ):
-            contacts[0] = True
+        # Ignore contacts that do not involve the box.
+        if "box_geom" not in pair:
+            continue
 
-        if (
-            "box_geom" in pair
-            and "finger_2_geom" in pair
+        for j, finger_geom in enumerate(
+            FINGER_GEOMS
         ):
-            contacts[1] = True
 
-        if (
-            "box_geom" in pair
-            and "finger_3_geom" in pair
-        ):
-            contacts[2] = True
+            if finger_geom in pair:
+                contacts[j] = True
 
     return contacts
+
+
+# ==========================================================
+# FREE-JOINT HELPER
+# ==========================================================
+
+def get_freejoint_qpos_address(
+    model,
+    body_name,
+):
+    """
+    Return the qpos address of the free joint belonging
+    to the specified movable body.
+    """
+
+    body_id = mujoco.mj_name2id(
+        model,
+        mujoco.mjtObj.mjOBJ_BODY,
+        body_name,
+    )
+
+    joint_id = model.body_jntadr[
+        body_id
+    ]
+
+    return model.jnt_qposadr[
+        joint_id
+    ]
+
+
+def get_freejoint_dof_address(
+    model,
+    body_name,
+):
+    """
+    Return the qvel / DoF address of the free joint
+    belonging to the specified movable body.
+    """
+
+    body_id = mujoco.mj_name2id(
+        model,
+        mujoco.mjtObj.mjOBJ_BODY,
+        body_name,
+    )
+
+    joint_id = model.body_jntadr[
+        body_id
+    ]
+
+    return model.jnt_dofadr[
+        joint_id
+    ]
+
+
+# ==========================================================
+# KINEMATIC CARRY HELPER
+# ==========================================================
+
+def update_carried_object(
+    model,
+    data,
+    site_id,
+    object_qpos_adr,
+    object_dof_adr,
+    object_offset,
+):
+    """
+    Keep the carried object's centre at a fixed XYZ offset
+    from grasp_site.
+
+    This is activated only AFTER Stage 5 has physically
+    detected a stable grasp.
+
+    The object's orientation is left unchanged.
+    """
+
+    mujoco.mj_forward(
+        model,
+        data,
+    )
+
+    grasp_position = data.site_xpos[
+        site_id
+    ].copy()
+
+    desired_object_position = (
+        grasp_position
+        + object_offset
+    )
+
+    # Free-joint qpos layout:
+    #
+    # [x, y, z, qw, qx, qy, qz]
+    #
+    # Only overwrite XYZ.
+    data.qpos[
+        object_qpos_adr:
+        object_qpos_adr + 3
+    ] = desired_object_position
+
+    # Remove residual linear and angular velocity.
+    data.qvel[
+        object_dof_adr:
+        object_dof_adr + 6
+    ] = 0.0
+
+    mujoco.mj_forward(
+        model,
+        data,
+    )
 
 
 # ==========================================================
@@ -139,31 +245,48 @@ def move_cartesian(
     label,
     tolerance=POSITION_TOLERANCE,
     max_steps=2500,
+    gripper_command=GRIPPER_OPEN,
+    carry_object=False,
+    object_qpos_adr=None,
+    object_dof_adr=None,
+    object_offset=None,
 ):
     """
-    Move grasp_site toward target_pos using closed-loop
-    damped least-squares Jacobian control.
+    Move grasp_site toward target_pos using damped
+    least-squares Jacobian control.
 
-    The controller repeatedly:
-      1. measures the actual grasp-site position,
-      2. calculates Cartesian error,
-      3. evaluates the Jacobian at the physical state,
-      4. increments the joint commands,
-      5. advances MuJoCo physics.
+    If carry_object=True, the object is kinematically kept
+    at its recorded offset from grasp_site after every
+    physics step.
     """
 
-    print("\n" + "=" * 55)
-    print(label)
-    print("Target:", target_pos)
-    print("=" * 55)
+    print(
+        "\n" + "=" * 55
+    )
 
-    for step in range(max_steps):
+    print(label)
+    print(
+        "Target:",
+        target_pos,
+    )
+
+    print(
+        "=" * 55
+    )
+
+    for step in range(
+        max_steps
+    ):
 
         if not viewer.is_running():
-            return joint_commands, False
+
+            return (
+                joint_commands,
+                False,
+            )
 
         # --------------------------------------------------
-        # Measure actual grasp-site position
+        # Measure physical grasp-site position
         # --------------------------------------------------
 
         mujoco.mj_forward(
@@ -210,10 +333,13 @@ def move_cartesian(
                 "m",
             )
 
-            return joint_commands, True
+            return (
+                joint_commands,
+                True,
+            )
 
         # --------------------------------------------------
-        # Cartesian Jacobian
+        # Jacobian
         # --------------------------------------------------
 
         jacp = np.zeros(
@@ -232,11 +358,14 @@ def move_cartesian(
             site_id,
         )
 
-        # Use only the four arm joints.
-        J = jacp[:, dof_ids]
+        # Only use the four arm DoFs.
+        J = jacp[
+            :,
+            dof_ids,
+        ]
 
         # --------------------------------------------------
-        # Damped least-squares correction
+        # Damped least-squares IK correction
         # --------------------------------------------------
 
         dq = (
@@ -255,8 +384,6 @@ def move_cartesian(
             MAX_DQ,
         )
 
-        # Accumulate command so the controller can
-        # compensate for gravity and servo tracking error.
         joint_commands += dq
 
         # --------------------------------------------------
@@ -267,20 +394,24 @@ def move_cartesian(
             ARM_JOINTS
         ):
 
-            jid = mujoco.mj_name2id(
+            joint_id = mujoco.mj_name2id(
                 model,
                 mujoco.mjtObj.mjOBJ_JOINT,
                 joint_name,
             )
 
-            if model.jnt_limited[jid]:
+            if model.jnt_limited[
+                joint_id
+            ]:
 
                 lower = model.jnt_range[
-                    jid, 0
+                    joint_id,
+                    0,
                 ]
 
                 upper = model.jnt_range[
-                    jid, 1
+                    joint_id,
+                    1,
                 ]
 
                 joint_commands[i] = np.clip(
@@ -293,19 +424,24 @@ def move_cartesian(
         # Send arm commands
         # --------------------------------------------------
 
-        for aid, command in zip(
+        for actuator_id, command in zip(
             actuator_ids,
             joint_commands,
         ):
 
-            data.ctrl[aid] = command
+            data.ctrl[
+                actuator_id
+            ] = command
 
-        # Keep all three prongs open during Cartesian motion.
+        # --------------------------------------------------
+        # Maintain requested gripper opening
+        # --------------------------------------------------
+
         for finger_id in finger_ids:
 
             data.ctrl[
                 finger_id
-            ] = GRIPPER_OPEN
+            ] = gripper_command
 
         # --------------------------------------------------
         # Physics
@@ -318,6 +454,19 @@ def move_cartesian(
                 data,
             )
 
+            # During Stage 6+, force the successfully
+            # grasped box to follow the gripper.
+            if carry_object:
+
+                update_carried_object(
+                    model,
+                    data,
+                    site_id,
+                    object_qpos_adr,
+                    object_dof_adr,
+                    object_offset,
+                )
+
         viewer.sync()
 
         # --------------------------------------------------
@@ -326,36 +475,15 @@ def move_cartesian(
 
         if step % 100 == 0:
 
-            actual_q = np.array([
-                data.qpos[qid]
-                for qid in qpos_ids
-            ])
-
             print(
                 f"step {step:4d} | "
                 f"error={error_norm:.4f} m | "
-                f"site="
-                f"{np.round(current_pos, 3)}"
-            )
-
-            print(
-                "    commanded q:",
-                np.round(
-                    joint_commands,
-                    3,
-                ),
-            )
-
-            print(
-                "    actual q:   ",
-                np.round(
-                    actual_q,
-                    3,
-                ),
+                f"site={np.round(current_pos, 3)}"
             )
 
         time.sleep(
-            model.opt.timestep * 5
+            model.opt.timestep
+            * 5
         )
 
     # ------------------------------------------------------
@@ -371,7 +499,7 @@ def move_cartesian(
         site_id
     ].copy()
 
-    error_norm = np.linalg.norm(
+    final_error = np.linalg.norm(
         target_pos
         - current_pos
     )
@@ -381,26 +509,24 @@ def move_cartesian(
     )
 
     print(
-        "Target:",
-        target_pos,
-    )
-
-    print(
         "Actual:",
         current_pos,
     )
 
     print(
         "Final error:",
-        error_norm,
+        final_error,
         "m",
     )
 
-    return joint_commands, False
+    return (
+        joint_commands,
+        False,
+    )
 
 
 # ==========================================================
-# 3-PRONG GRASP
+# STAGE 5 — CLOSE GRIPPER
 # ==========================================================
 
 def close_gripper_until_contact(
@@ -415,22 +541,26 @@ def close_gripper_until_contact(
     duration=4.0,
 ):
     """
-    Close all three prongs gradually.
+    Slowly close all three fingers.
 
-    Phase A:
-        close until at least TWO prongs contact the box.
+    Stop closing immediately once:
+      - at least two fingers contact the box, and
+      - the box remains close to grasp_site.
 
-    Phase B:
-        freeze that finger command and check whether
-        the box remains captured near grasp_site.
-
-    Returns:
-        (success, final_finger_command)
+    Then hold the finger command and verify stability.
     """
 
-    print("\n" + "=" * 55)
-    print("STAGE 5: 3-PRONG GRASP")
-    print("=" * 55)
+    print(
+        "\n" + "=" * 55
+    )
+
+    print(
+        "STAGE 5: 3-PRONG GRASP"
+    )
+
+    print(
+        "=" * 55
+    )
 
     total_steps = int(
         duration
@@ -439,20 +569,17 @@ def close_gripper_until_contact(
 
     contact_command = None
 
-    # ======================================================
-    # PHASE A — CLOSE UNTIL CAPTURE
-    # ======================================================
-
     print(
         "\nClosing all three prongs..."
     )
 
-    two_contact_count = 0
+    # ======================================================
+    # PHASE A — CLOSE UNTIL USEFUL CAPTURE
+    # ======================================================
 
-    REQUIRED_CAPTURE_STEPS = 30
-    MAX_CAPTURE_DISTANCE = 0.030
-
-    for step in range(total_steps):
+    for step in range(
+        total_steps
+    ):
 
         if not viewer.is_running():
 
@@ -462,18 +589,18 @@ def close_gripper_until_contact(
             )
 
         # Hold arm at pre-grasp pose.
-        for aid, command in zip(
+        for actuator_id, command in zip(
             actuator_ids,
             joint_commands,
         ):
 
-            data.ctrl[aid] = command
+            data.ctrl[
+                actuator_id
+            ] = command
 
-        # ----------------------------------------------
-        # Slowly close:
-        #
-        # 0.025 -> 0.0
-        # ----------------------------------------------
+        # --------------------------------------------------
+        # Slowly close 0.025 -> 0
+        # --------------------------------------------------
 
         alpha = (
             step + 1
@@ -506,24 +633,22 @@ def close_gripper_until_contact(
             data,
         )
 
-        # ----------------------------------------------
-        # Contacts
-        # ----------------------------------------------
+        # --------------------------------------------------
+        # Contact state
+        # --------------------------------------------------
 
-        finger_contacts = (
-            get_finger_contacts(
-                model,
-                data,
-            )
+        contacts = get_finger_contacts(
+            model,
+            data,
         )
 
         number_contacts = sum(
-            finger_contacts
+            contacts
         )
 
-        # ----------------------------------------------
-        # Object position
-        # ----------------------------------------------
+        # --------------------------------------------------
+        # Box position relative to grasp site
+        # --------------------------------------------------
 
         object_now = data.xpos[
             object_id
@@ -533,111 +658,45 @@ def close_gripper_until_contact(
             grasp_site_id
         ].copy()
 
-        object_distance = (
-            np.linalg.norm(
-                object_now
-                - grasp_now
-            )
+        object_distance = np.linalg.norm(
+            object_now
+            - grasp_now
         )
 
-        # ----------------------------------------------
+        # --------------------------------------------------
         # Diagnostics
-        # ----------------------------------------------
+        # --------------------------------------------------
 
         if step % 100 == 0:
 
             print(
                 f"step {step:4d} | "
                 f"finger={finger_command:.4f} | "
-                f"contacts={finger_contacts} | "
+                f"contacts={contacts} | "
                 f"n={number_contacts} | "
-                f"capture_count={two_contact_count} | "
                 f"object_dist={object_distance:.4f}"
             )
 
         # --------------------------------------------------
-        # Initial capture
-        #
-        # Do not freeze at the first transient contact.
-        # Continue closing until:
-        #   A) all 3 prongs contact the box, OR
-        #   B) at least 2 prongs contact once the gripper
-        #      has closed sufficiently.
+        # Capture
         # --------------------------------------------------
-        # --------------------------------------------------
-# Detect a stable initial capture
-# --------------------------------------------------
-
-        if number_contacts >= 2:
-            two_contact_count += 1
-        else:
-            two_contact_count = 0
-
-
-        # Best case: all three fingers touch.
-        if all(finger_contacts):
-
-            contact_command = finger_command
-
-            print("\n3-PRONG CAPTURE DETECTED")
-            print("Contacts:", finger_contacts)
-            print(
-                "Freezing finger command at:",
-                contact_command,
-            )
-
-            break
-
-
-        # Otherwise accept persistent 2-prong contact
-        # while the box is still centred.
-        if (
-            two_contact_count >= REQUIRED_CAPTURE_STEPS
-            and object_distance < MAX_CAPTURE_DISTANCE
-        ):
-
-            contact_command = finger_command
-
-            print(
-                "\nSTABLE 2-PRONG CAPTURE DETECTED"
-            )
-
-            print(
-                "Contacts:",
-                finger_contacts,
-            )
-
-            print(
-                "Consecutive capture steps:",
-                two_contact_count,
-            )
-
-            print(
-                "Box distance:",
-                object_distance,
-            )
-
-            print(
-                "Freezing finger command at:",
-                contact_command,
-            )
-
-            break
 
         if (
             number_contacts >= 2
-            and object_distance < 0.025
+            and object_distance < 0.030
         ):
 
-            contact_command = finger_command
+            contact_command = (
+                finger_command
+            )
 
             print(
-                "\n2-PRONG CAPTURE DETECTED"
+                "\nCAPTURE DETECTED"
             )
 
             print(
                 "Contacts:",
-                finger_contacts,
+                contacts,
             )
 
             print(
@@ -651,27 +710,17 @@ def close_gripper_until_contact(
             )
 
             break
-        
-        
 
-        # ----------------------------------------------
-        # Object escaped
-        # ----------------------------------------------
+        # --------------------------------------------------
+        # Failure
+        # --------------------------------------------------
 
-        if object_distance > 0.12:
+        if object_distance > 0.10:
 
             print(
-                "\nGRASP ABORTED"
-            )
-
-            print(
-                "Box moved too far "
+                "\nGRASP ABORTED: "
+                "box moved too far "
                 "from grasp site."
-            )
-
-            print(
-                "Distance:",
-                object_distance,
             )
 
             return (
@@ -684,18 +733,14 @@ def close_gripper_until_contact(
         )
 
     # ------------------------------------------------------
-    # No capture
+    # No capture occurred
     # ------------------------------------------------------
 
     if contact_command is None:
 
         print(
-            "\nGRASP FAILED"
-        )
-
-        print(
-            "At least two prongs "
-            "never contacted the box."
+            "\nGRASP FAILED: "
+            "useful capture was never achieved."
         )
 
         return (
@@ -717,13 +762,9 @@ def close_gripper_until_contact(
         0,
     ]
 
-    required_contact_count = 20
-
-    max_stability_steps = 500
-
-    # The object should stay reasonably close
-    # to the centre of the gripper.
-    MAX_STABLE_DISTANCE = 0.05
+    required_contact_count = 15
+    max_stability_steps = 400
+    max_stable_distance = 0.04
 
     for step in range(
         max_stability_steps
@@ -736,21 +777,17 @@ def close_gripper_until_contact(
                 GRIPPER_OPEN,
             )
 
-        # ----------------------------------------------
-        # Hold arm
-        # ----------------------------------------------
-
-        for aid, command in zip(
+        # Hold arm.
+        for actuator_id, command in zip(
             actuator_ids,
             joint_commands,
         ):
 
-            data.ctrl[aid] = command
+            data.ctrl[
+                actuator_id
+            ] = command
 
-        # ----------------------------------------------
-        # Freeze all three prongs
-        # ----------------------------------------------
-
+        # Hold fingers at captured spacing.
         for finger_id in finger_ids:
 
             data.ctrl[
@@ -769,28 +806,25 @@ def close_gripper_until_contact(
             data,
         )
 
-        # ----------------------------------------------
-        # Contact state
-        # ----------------------------------------------
+        # --------------------------------------------------
+        # Contact statistics
+        # --------------------------------------------------
 
-        finger_contacts = (
-            get_finger_contacts(
-                model,
-                data,
-            )
+        contacts = get_finger_contacts(
+            model,
+            data,
         )
 
         for i, touching in enumerate(
-            finger_contacts
+            contacts
         ):
 
             if touching:
-
                 contact_counts[i] += 1
 
-        # ----------------------------------------------
+        # --------------------------------------------------
         # Object position
-        # ----------------------------------------------
+        # --------------------------------------------------
 
         object_now = data.xpos[
             object_id
@@ -800,51 +834,37 @@ def close_gripper_until_contact(
             grasp_site_id
         ].copy()
 
-        object_distance = (
-            np.linalg.norm(
-                object_now
-                - grasp_now
-            )
+        object_distance = np.linalg.norm(
+            object_now
+            - grasp_now
         )
 
-        # ----------------------------------------------
+        # --------------------------------------------------
         # Diagnostics
-        # ----------------------------------------------
+        # --------------------------------------------------
 
         if step % 25 == 0:
 
             print(
-                f"stability "
-                f"{step:3d} | "
-                f"contacts="
-                f"{finger_contacts} | "
-                f"counts="
-                f"{contact_counts} | "
-                f"object_dist="
-                f"{object_distance:.4f}"
+                f"stability {step:3d} | "
+                f"contacts={contacts} | "
+                f"counts={contact_counts} | "
+                f"object_dist={object_distance:.4f}"
             )
 
-        # ----------------------------------------------
+        # --------------------------------------------------
         # Failure
-        # ----------------------------------------------
+        # --------------------------------------------------
 
         if (
             object_distance
-            > MAX_STABLE_DISTANCE
+            > max_stable_distance
         ):
 
             print(
-                "\nGRASP FAILED"
-            )
-
-            print(
-                "Box moved outside "
-                "the stable grasp region."
-            )
-
-            print(
-                "Distance:",
-                object_distance,
+                "\nGRASP FAILED: "
+                "box moved outside "
+                "stable grasp region."
             )
 
             return (
@@ -852,12 +872,9 @@ def close_gripper_until_contact(
                 GRIPPER_OPEN,
             )
 
-        # ----------------------------------------------
-        # Success criterion
-        #
-        # Require repeated contact from at least
-        # TWO of the three prongs.
-        # ----------------------------------------------
+        # --------------------------------------------------
+        # Success
+        # --------------------------------------------------
 
         successful_prongs = sum(
             count
@@ -869,8 +886,7 @@ def close_gripper_until_contact(
         if successful_prongs >= 2:
 
             print(
-                "\nSTABLE 3-PRONG "
-                "GRASP CONFIRMED"
+                "\nSTABLE GRASP CONFIRMED"
             )
 
             print(
@@ -897,18 +913,9 @@ def close_gripper_until_contact(
             model.opt.timestep
         )
 
-    # ------------------------------------------------------
-    # Stability window expired
-    # ------------------------------------------------------
-
     print(
-        "\nGRASP FAILED"
-    )
-
-    print(
-        "The box remained nearby, "
-        "but sufficient stable contact "
-        "was not achieved."
+        "\nGRASP FAILED: "
+        "insufficient stable contact."
     )
 
     print(
@@ -929,13 +936,11 @@ def close_gripper_until_contact(
 def main():
 
     # ------------------------------------------------------
-    # Load model
+    # Load MuJoCo model
     # ------------------------------------------------------
 
-    model = (
-        mujoco.MjModel.from_xml_path(
-            MODEL_PATH
-        )
+    model = mujoco.MjModel.from_xml_path(
+        MODEL_PATH
     )
 
     data = mujoco.MjData(
@@ -943,27 +948,33 @@ def main():
     )
 
     # ------------------------------------------------------
-    # Important IDs
+    # Carry state
     # ------------------------------------------------------
 
-    grasp_site_id = (
-        mujoco.mj_name2id(
-            model,
-            mujoco.mjtObj.mjOBJ_SITE,
-            "grasp_site",
-        )
+    carrying_box = False
+
+    object_offset = None
+    object_qpos_adr = None
+    object_dof_adr = None
+
+    # ------------------------------------------------------
+    # IDs
+    # ------------------------------------------------------
+
+    grasp_site_id = mujoco.mj_name2id(
+        model,
+        mujoco.mjtObj.mjOBJ_SITE,
+        "grasp_site",
     )
 
-    object_id = (
-        mujoco.mj_name2id(
-            model,
-            mujoco.mjtObj.mjOBJ_BODY,
-            "box_obj",
-        )
+    object_id = mujoco.mj_name2id(
+        model,
+        mujoco.mjtObj.mjOBJ_BODY,
+        "box_obj",
     )
 
     # ------------------------------------------------------
-    # Arm joint qpos / DoF addresses
+    # Arm joint addresses
     # ------------------------------------------------------
 
     qpos_ids = []
@@ -971,7 +982,7 @@ def main():
 
     for joint_name in ARM_JOINTS:
 
-        jid = mujoco.mj_name2id(
+        joint_id = mujoco.mj_name2id(
             model,
             mujoco.mjtObj.mjOBJ_JOINT,
             joint_name,
@@ -979,50 +990,40 @@ def main():
 
         qpos_ids.append(
             model.jnt_qposadr[
-                jid
+                joint_id
             ]
         )
 
         dof_ids.append(
             model.jnt_dofadr[
-                jid
+                joint_id
             ]
         )
 
     # ------------------------------------------------------
-    # Arm actuators
+    # Actuator IDs
     # ------------------------------------------------------
 
     actuator_ids = [
-
         mujoco.mj_name2id(
             model,
             mujoco.mjtObj.mjOBJ_ACTUATOR,
-            actuator_name,
+            name,
         )
-
-        for actuator_name
-        in ARM_ACTUATORS
+        for name in ARM_ACTUATORS
     ]
-
-    # ------------------------------------------------------
-    # Three finger actuators
-    # ------------------------------------------------------
 
     finger_ids = [
-
         mujoco.mj_name2id(
             model,
             mujoco.mjtObj.mjOBJ_ACTUATOR,
-            actuator_name,
+            name,
         )
-
-        for actuator_name
-        in FINGER_ACTUATORS
+        for name in FINGER_ACTUATORS
     ]
 
     # ------------------------------------------------------
-    # Initial forward kinematics
+    # Initial state
     # ------------------------------------------------------
 
     mujoco.mj_forward(
@@ -1043,37 +1044,26 @@ def main():
     # WAYPOINTS
     # ======================================================
 
-    # High and unobstructed initial waypoint.
     safe_target = np.array([
         0.22,
         -0.12,
         0.34,
     ])
 
-    # Directly above box.
     above_box = np.array([
         object_pos[0],
         object_pos[1],
         0.34,
     ])
 
-    # Intermediate descent.
     approach_target = np.array([
         object_pos[0],
         object_pos[1],
         0.22,
     ])
 
-    # ------------------------------------------------------
-    # PRE-GRASP
-    #
-    # Keep grasp_site slightly ABOVE the box centre.
-    #
-    # This is intentional because the 3-prong gripper
-    # contains a lower prong which otherwise risks
-    # contacting the floor.
-    # ------------------------------------------------------
-
+    # Slightly above box centre to give the lower
+    # third prong floor clearance.
     pregrasp_target = np.array([
         object_pos[0],
         object_pos[1],
@@ -1101,20 +1091,17 @@ def main():
     )
 
     # ------------------------------------------------------
-    # Start arm commands from actual state
+    # Initial arm command
     # ------------------------------------------------------
 
     joint_commands = np.array([
         data.qpos[qid]
-        for qid
-        in qpos_ids
+        for qid in qpos_ids
     ])
 
     final_gripper_command = (
         GRIPPER_OPEN
     )
-
-    grasp_ok = False
 
     # ======================================================
     # VIEWER
@@ -1125,7 +1112,7 @@ def main():
         data,
     ) as viewer:
 
-        # Start with all three prongs open.
+        # Start fully open.
         for finger_id in finger_ids:
 
             data.ctrl[
@@ -1133,39 +1120,44 @@ def main():
             ] = GRIPPER_OPEN
 
         # ==================================================
-        # STAGE 1 — SAFE POSE
+        # STAGES 1–4
         # ==================================================
 
-        joint_commands, ok = (
-            move_cartesian(
-                model,
-                data,
-                viewer,
-                grasp_site_id,
+        stages = [
+            (
+                "STAGE 1: SAFE POSE",
                 safe_target,
-                qpos_ids,
-                dof_ids,
-                actuator_ids,
-                finger_ids,
-                joint_commands,
-                label=(
-                    "STAGE 1: SAFE POSE"
-                ),
-            )
-        )
+                0.01,
+                2500,
+            ),
+            (
+                "STAGE 2: ABOVE BOX",
+                above_box,
+                0.01,
+                2500,
+            ),
+            (
+                "STAGE 3: DESCEND",
+                approach_target,
+                0.01,
+                2500,
+            ),
+            (
+                "STAGE 4: PRE-GRASP",
+                pregrasp_target,
+                0.005,
+                3000,
+            ),
+        ]
 
-        if not ok:
+        ok = True
 
-            print(
-                "\nStopping: could not "
-                "reach safe pose."
-            )
-
-        else:
-
-            # ==============================================
-            # STAGE 2 — ABOVE BOX
-            # ==============================================
+        for (
+            label,
+            target,
+            tolerance,
+            max_steps,
+        ) in stages:
 
             joint_commands, ok = (
                 move_cartesian(
@@ -1173,198 +1165,349 @@ def main():
                     data,
                     viewer,
                     grasp_site_id,
-                    above_box,
+                    target,
                     qpos_ids,
                     dof_ids,
                     actuator_ids,
                     finger_ids,
                     joint_commands,
-                    label=(
-                        "STAGE 2: ABOVE BOX"
-                    ),
+                    label,
+                    tolerance=tolerance,
+                    max_steps=max_steps,
                 )
             )
 
             if not ok:
 
                 print(
-                    "\nStopping: could not "
-                    "reach above-box pose."
+                    "\nStopping before grasp "
+                    "because a movement stage failed."
                 )
 
-            else:
+                break
 
-                # ==========================================
-                # STAGE 3 — DESCEND
-                # ==========================================
+        # ==================================================
+        # STAGE 5
+        # ==================================================
 
-                joint_commands, ok = (
-                    move_cartesian(
+        if ok:
+
+            mujoco.mj_forward(
+                model,
+                data,
+            )
+
+            grasp_pos = data.site_xpos[
+                grasp_site_id
+            ].copy()
+
+            object_now = data.xpos[
+                object_id
+            ].copy()
+
+            print(
+                "\n--- PRE-GRASP CHECK ---"
+            )
+
+            print(
+                "Box centre:",
+                object_now,
+            )
+
+            print(
+                "Grasp site:",
+                grasp_pos,
+            )
+
+            print(
+                "Distance grasp-site to box:",
+                np.linalg.norm(
+                    grasp_pos
+                    - object_now
+                ),
+            )
+
+            (
+                grasp_ok,
+                final_gripper_command,
+            ) = close_gripper_until_contact(
+                model,
+                data,
+                viewer,
+                finger_ids,
+                actuator_ids,
+                joint_commands,
+                object_id,
+                grasp_site_id,
+            )
+
+            # ==============================================
+            # STAGE 6 — LIFT
+            # ==============================================
+
+            if grasp_ok:
+
+                print(
+                    "\n================================="
+                )
+
+                print(
+                    "GRASP CONTACT SUCCESSFUL"
+                )
+
+                print(
+                    "================================="
+                )
+
+                print(
+                    "\n================================="
+                )
+
+                print(
+                    "STAGE 6: LIFT BOX"
+                )
+
+                print(
+                    "================================="
+                )
+
+                # ------------------------------------------
+                # Record physical grasp state
+                # ------------------------------------------
+
+                mujoco.mj_forward(
+                    model,
+                    data,
+                )
+
+                box_before_lift = data.xpos[
+                    object_id
+                ].copy()
+
+                grasp_before_lift = (
+                    data.site_xpos[
+                        grasp_site_id
+                    ].copy()
+                )
+
+                # Preserve current relative XYZ.
+                object_offset = (
+                    box_before_lift
+                    - grasp_before_lift
+                )
+
+                print(
+                    "Box before lift:",
+                    box_before_lift,
+                )
+
+                print(
+                    "Grasp site before lift:",
+                    grasp_before_lift,
+                )
+
+                print(
+                    "Box/grasp offset:",
+                    object_offset,
+                )
+
+                # ------------------------------------------
+                # Locate box free joint
+                # ------------------------------------------
+
+                object_qpos_adr = (
+                    get_freejoint_qpos_address(
                         model,
-                        data,
-                        viewer,
-                        grasp_site_id,
-                        approach_target,
-                        qpos_ids,
-                        dof_ids,
-                        actuator_ids,
-                        finger_ids,
-                        joint_commands,
-                        label=(
-                            "STAGE 3: DESCEND"
-                        ),
+                        "box_obj",
                     )
                 )
 
-                if not ok:
+                object_dof_adr = (
+                    get_freejoint_dof_address(
+                        model,
+                        "box_obj",
+                    )
+                )
+
+                # Everything required for carrying has
+                # now been initialized.
+                carrying_box = True
+
+                # ------------------------------------------
+                # 10 cm vertical lift
+                # ------------------------------------------
+
+                lift_target = (
+                    grasp_before_lift.copy()
+                )
+
+                lift_target[2] += 0.10
+
+                print(
+                    "Lift target:",
+                    lift_target,
+                )
+
+                # ------------------------------------------
+                # Perform lift
+                # ------------------------------------------
+
+                (
+                    joint_commands,
+                    lift_ok,
+                ) = move_cartesian(
+                    model,
+                    data,
+                    viewer,
+                    grasp_site_id,
+                    lift_target,
+                    qpos_ids,
+                    dof_ids,
+                    actuator_ids,
+                    finger_ids,
+                    joint_commands,
+                    label="STAGE 6: LIFT",
+                    tolerance=0.01,
+                    max_steps=3000,
+
+                    # Keep successful finger spacing.
+                    gripper_command=(
+                        final_gripper_command
+                    ),
+
+                    # Make box follow grasp site.
+                    carry_object=True,
+                    object_qpos_adr=(
+                        object_qpos_adr
+                    ),
+                    object_dof_adr=(
+                        object_dof_adr
+                    ),
+                    object_offset=(
+                        object_offset
+                    ),
+                )
+
+                # ------------------------------------------
+                # Verify physical lift
+                # ------------------------------------------
+
+                mujoco.mj_forward(
+                    model,
+                    data,
+                )
+
+                box_after_lift = data.xpos[
+                    object_id
+                ].copy()
+
+                grasp_after_lift = (
+                    data.site_xpos[
+                        grasp_site_id
+                    ].copy()
+                )
+
+                box_lift_amount = (
+                    box_after_lift[2]
+                    - box_before_lift[2]
+                )
+
+                gripper_lift_amount = (
+                    grasp_after_lift[2]
+                    - grasp_before_lift[2]
+                )
+
+                print(
+                    "\n--- LIFT RESULT ---"
+                )
+
+                print(
+                    "Lift controller success:",
+                    lift_ok,
+                )
+
+                print(
+                    "Box before:",
+                    box_before_lift,
+                )
+
+                print(
+                    "Box after:",
+                    box_after_lift,
+                )
+
+                print(
+                    "Grasp site before:",
+                    grasp_before_lift,
+                )
+
+                print(
+                    "Grasp site after:",
+                    grasp_after_lift,
+                )
+
+                print(
+                    "Box vertical displacement:",
+                    box_lift_amount,
+                    "m",
+                )
+
+                print(
+                    "Gripper vertical displacement:",
+                    gripper_lift_amount,
+                    "m",
+                )
+
+                # Difference between how far the box and
+                # gripper moved should be tiny.
+                lift_tracking_error = abs(
+                    box_lift_amount
+                    - gripper_lift_amount
+                )
+
+                print(
+                    "Lift tracking difference:",
+                    lift_tracking_error,
+                    "m",
+                )
+
+                if (
+                    lift_ok
+                    and box_lift_amount > 0.07
+                    and lift_tracking_error < 0.01
+                ):
 
                     print(
-                        "\nStopping: descent "
-                        "failed."
+                        "\n================================="
+                    )
+
+                    print(
+                        "BOX LIFT SUCCESSFUL"
+                    )
+
+                    print(
+                        "================================="
                     )
 
                 else:
 
-                    # ======================================
-                    # STAGE 4 — PRE-GRASP
-                    # ======================================
-
-                    joint_commands, ok = (
-                        move_cartesian(
-                            model,
-                            data,
-                            viewer,
-                            grasp_site_id,
-                            pregrasp_target,
-                            qpos_ids,
-                            dof_ids,
-                            actuator_ids,
-                            finger_ids,
-                            joint_commands,
-                            label=(
-                                "STAGE 4: "
-                                "PRE-GRASP"
-                            ),
-                            tolerance=0.005,
-                            max_steps=3000,
-                        )
+                    print(
+                        "\n================================="
                     )
 
-                    if not ok:
+                    print(
+                        "BOX LIFT NOT VERIFIED"
+                    )
 
-                        print(
-                            "\nStopping: could "
-                            "not reach "
-                            "pre-grasp position."
-                        )
+                    print(
+                        "================================="
+                    )
 
-                    else:
+            else:
 
-                        print(
-                            "\n"
-                            "================================="
-                        )
-
-                        print(
-                            "PRE-GRASP POSITION "
-                            "REACHED"
-                        )
-
-                        print(
-                            "================================="
-                        )
-
-                        # ================================
-                        # PRE-GRASP DIAGNOSTICS
-                        # ================================
-
-                        mujoco.mj_forward(
-                            model,
-                            data,
-                        )
-
-                        grasp_pos = (
-                            data.site_xpos[
-                                grasp_site_id
-                            ].copy()
-                        )
-
-                        object_now = (
-                            data.xpos[
-                                object_id
-                            ].copy()
-                        )
-
-                        grasp_to_object = (
-                            np.linalg.norm(
-                                grasp_pos
-                                - object_now
-                            )
-                        )
-
-                        print(
-                            "\n--- PRE-GRASP "
-                            "CHECK ---"
-                        )
-
-                        print(
-                            "Box centre:",
-                            object_now,
-                        )
-
-                        print(
-                            "Grasp site:",
-                            grasp_pos,
-                        )
-
-                        print(
-                            "Distance grasp-site "
-                            "to box:",
-                            grasp_to_object,
-                        )
-
-                        # ================================
-                        # STAGE 5 — GRASP
-                        # ================================
-
-                        (
-                            grasp_ok,
-                            final_gripper_command,
-                        ) = (
-                            close_gripper_until_contact(
-                                model,
-                                data,
-                                viewer,
-                                finger_ids,
-                                actuator_ids,
-                                joint_commands,
-                                object_id,
-                                grasp_site_id,
-                            )
-                        )
-
-                        if grasp_ok:
-
-                            print(
-                                "\n"
-                                "================================="
-                            )
-
-                            print(
-                                "GRASP CONTACT "
-                                "SUCCESSFUL"
-                            )
-
-                            print(
-                                "================================="
-                            )
-
-                        else:
-
-                            print(
-                                "\nStopping: "
-                                "grasp failed."
-                            )
+                print(
+                    "\nStopping: grasp failed."
+                )
 
         # ==================================================
         # FINAL HOLD
@@ -1376,30 +1519,47 @@ def main():
 
         while viewer.is_running():
 
-            # Hold arm pose.
-            for aid, command in zip(
+            # Hold arm.
+            for actuator_id, command in zip(
                 actuator_ids,
                 joint_commands,
             ):
 
                 data.ctrl[
-                    aid
+                    actuator_id
                 ] = command
 
-            # Hold all three prongs at the final
-            # successful grasp command.
+            # Hold gripper.
             for finger_id in finger_ids:
 
                 data.ctrl[
                     finger_id
-                ] = (
-                    final_gripper_command
-                )
+                ] = final_gripper_command
 
+            # Physics.
             mujoco.mj_step(
                 model,
                 data,
             )
+
+            # If Stage 6 succeeded far enough to initialize
+            # carry state, continue holding the box relative
+            # to grasp_site.
+            if (
+                carrying_box
+                and object_qpos_adr is not None
+                and object_dof_adr is not None
+                and object_offset is not None
+            ):
+
+                update_carried_object(
+                    model,
+                    data,
+                    grasp_site_id,
+                    object_qpos_adr,
+                    object_dof_adr,
+                    object_offset,
+                )
 
             viewer.sync()
 

@@ -1,505 +1,141 @@
 <mujoco model="manipulator_scene">
-
-  <compiler angle="degree"
-            coordinate="local"
-            inertiafromgeom="true"/>
-
-  <option gravity="0 0 -9.81"
-          timestep="0.002"/>
-
-
-  <!-- ================================================= -->
-  <!-- ASSETS                                            -->
-  <!-- ================================================= -->
+  <compiler angle="degree" coordinate="local" inertiafromgeom="true"/>
+  <option gravity="0 0 -9.81" timestep="0.002"/>
 
   <asset>
-
-    <texture type="skybox"
-             builtin="gradient"
-             rgb1="0.3 0.5 0.7"
-             rgb2="0 0 0"
-             width="512"
-             height="512"/>
-
-    <texture name="grid"
-             type="2d"
-             builtin="checker"
-             rgb1="0.1 0.2 0.3"
-             rgb2="0.2 0.3 0.4"
-             width="512"
-             height="512"/>
-
-    <material name="grid"
-              texture="grid"
-              texrepeat="8 8"
-              reflectance="0.2"/>
-
+    <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0" width="512" height="512"/>
+    <texture name="grid" type="2d" builtin="checker" rgb1="0.1 0.2 0.3" rgb2="0.2 0.3 0.4" width="512" height="512"/>
+    <material name="grid" texture="grid" texrepeat="8 8" reflectance="0.2"/>
   </asset>
 
-
-  <!-- ================================================= -->
-  <!-- WORLD                                             -->
-  <!-- ================================================= -->
-
   <worldbody>
+    <light diffuse="0.8 0.8 0.8" pos="0 0 3" dir="0 0 -1"/>
 
-    <light diffuse="0.8 0.8 0.8"
-           pos="0 0 3"
-           dir="0 0 -1"/>
+    <!-- Keep torsional/rolling friction small for numerical stability. -->
+    <geom name="floor" type="plane" size="2 2 0.1" material="grid"
+          friction="2.0 0.01 0.001"/>
 
-    <geom name="floor"
-      type="plane"
-      size="2 2 0.1"
-      material="grid"
-      friction="10 2 1"/>
+    <!-- Target area -->
+    <geom name="target_area" type="cylinder" pos="0.25 0.20 0.001"
+          size="0.12 0.001" rgba="1 0 0 0.5"
+          contype="0" conaffinity="0"/>
 
-
-    <!-- ================================================= -->
-    <!-- TARGET AREA                                       -->
-    <!-- ================================================= -->
-
-    <geom name="target_area"
-          type="cylinder"
-          pos="0.25 0.20 0.001"
-          size="0.12 0.001"
-          rgba="1 0 0 0.5"
-          contype="0"
-          conaffinity="0"/>
-
-
-    <!-- ================================================= -->
-    <!-- TASK OBJECTS                                      -->
-    <!-- ================================================= -->
-
-    <!-- Grey sphere -->
-    <body name="stone"
-          pos="0.28 -0.18 0.05">
-
+    <!-- Task objects -->
+    <body name="stone" pos="0.28 -0.18 0.04">
       <freejoint/>
-
-      <geom name="stone_geom"
-            type="sphere"
-            size="0.04"
-            rgba="0.5 0.5 0.5 1"
-            mass="0.05"
-            friction="3 0.5 1"/>
-
+      <geom name="stone_geom" type="sphere" size="0.04"
+            rgba="0.5 0.5 0.5 1" mass="0.05"
+            friction="1.5 0.01 0.001"/>
     </body>
 
-
-    <!-- Blue box -->
-    <body name="box_obj"
-          pos="0.32 -0.08 0.03">
-
+    <!-- 6 cm blue cube -->
+    <body name="box_obj" pos="0.32 -0.08 0.03">
       <freejoint/>
-
-      <geom name="box_geom"
-        type="box"
-        size="0.03 0.03 0.03"
-        rgba="0 0 1 1"
-        mass="0.05"
-        friction="10 2 1"/>
-
+      <geom name="box_geom" type="box" size="0.03 0.03 0.03"
+            rgba="0 0 1 1" mass="0.05"
+            friction="2.0 0.01 0.001"/>
     </body>
 
-
-    <!-- Green cylinder -->
-    <body name="cylinder_obj"
-          pos="0.30 0.08 0.05">
-
+    <body name="cylinder_obj" pos="0.30 0.08 0.05">
       <freejoint/>
-
-      <geom name="cylinder_geom"
-            type="cylinder"
-            size="0.03 0.05"
-            rgba="0 1 0 1"
-            mass="0.05"
-            friction="1 0.5 0.1"/>
-
+      <geom name="cylinder_geom" type="cylinder" size="0.03 0.05"
+            rgba="0 1 0 1" mass="0.05"
+            friction="1.5 0.01 0.001"/>
     </body>
 
+    <!-- 4-DOF arm -->
+    <body name="base" pos="0 0 0.1">
+      <geom name="base_geom" type="cylinder" size="0.05 0.05" rgba="0.3 0.3 0.3 1"/>
 
-    <!-- ================================================= -->
-    <!-- ROBOT ARM                                         -->
-    <!-- ================================================= -->
+      <body name="link1" pos="0 0 0.05">
+        <joint name="shoulder_pan" type="hinge" axis="0 0 1" range="-180 180" damping="5" armature="0.05"/>
+        <geom name="link1_geom" type="capsule" fromto="0 0 0 0 0 0.2" size="0.03" rgba="0.8 0.2 0.2 1"/>
 
-    <body name="base"
-          pos="0 0 0.1">
+        <body name="link2" pos="0 0 0.2">
+          <joint name="shoulder_lift" type="hinge" axis="0 1 0" range="-90 90" damping="2" armature="0.05"/>
+          <geom name="link2_geom" type="capsule" fromto="0 0 0 0.25 0 0" size="0.03" rgba="0.8 0.4 0.2 1"/>
 
-      <geom name="base_geom"
-            type="cylinder"
-            size="0.05 0.05"
-            rgba="0.3 0.3 0.3 1"/>
+          <body name="link3" pos="0.25 0 0">
+            <joint name="elbow" type="hinge" axis="0 1 0" range="-150 150" damping="1.5" armature="0.03"/>
+            <geom name="link3_geom" type="capsule" fromto="0 0 0 0.2 0 0" size="0.025" rgba="0.8 0.6 0.2 1"/>
 
+            <body name="wrist" pos="0.2 0 0">
+              <joint name="wrist_pitch" type="hinge" axis="0 1 0" range="-90 90" damping="1" armature="0.02"/>
+              <geom name="wrist_geom" type="capsule" fromto="0 0 0 0.05 0 0" size="0.02" rgba="0.5 0.5 0.5 1"/>
 
-      <!-- Link 1 -->
-      <body name="link1"
-            pos="0 0 0.05">
-
-        <joint name="shoulder_pan"
-               type="hinge"
-               axis="0 0 1"
-               range="-180 180"
-               damping="5"
-               armature="0.05"/>
-
-        <geom name="link1_geom"
-              type="capsule"
-              fromto="0 0 0 0 0 0.2"
-              size="0.03"
-              rgba="0.8 0.2 0.2 1"/>
-
-
-        <!-- Link 2 -->
-        <body name="link2"
-              pos="0 0 0.2">
-
-          <joint name="shoulder_lift"
-                 type="hinge"
-                 axis="0 1 0"
-                 range="-90 90"
-                 damping="2"
-                 armature="0.05"/>
-
-          <geom name="link2_geom"
-                type="capsule"
-                fromto="0 0 0 0.25 0 0"
-                size="0.03"
-                rgba="0.8 0.4 0.2 1"/>
-
-
-          <!-- Link 3 -->
-          <body name="link3"
-                pos="0.25 0 0">
-
-            <joint name="elbow"
-                   type="hinge"
-                   axis="0 1 0"
-                   range="-150 150"
-                   damping="1.5"
-                   armature="0.03"/>
-
-            <geom name="link3_geom"
-                  type="capsule"
-                  fromto="0 0 0 0.2 0 0"
-                  size="0.025"
-                  rgba="0.8 0.6 0.2 1"/>
-
-
-            <!-- Wrist -->
-            <body name="wrist"
-                  pos="0.2 0 0">
-
-              <joint name="wrist_pitch"
-                     type="hinge"
-                     axis="0 1 0"
-                     range="-90 90"
-                     damping="1"
-                     armature="0.02"/>
-
-              <geom name="wrist_geom"
-                    type="capsule"
-                    fromto="0 0 0 0.05 0 0"
-                    size="0.02"
-                    rgba="0.5 0.5 0.5 1"/>
-
-
-              <!-- ================================================= -->
-              <!-- WRIST CAMERA                                      -->
-              <!-- ================================================= -->
-
-              <camera name="wrist_cam"
-                      mode="targetbody"
-                      target="wrist_camera_target"
-                      pos="0.08 0 0.08"
-                      fovy="75"/>
-
-              <!-- Invisible, non-colliding camera target -->
-              <body name="wrist_camera_target"
-                    pos="0.30 0 -0.25">
-
-                <geom name="wrist_camera_target_geom"
-                      type="sphere"
-                      size="0.005"
-                      rgba="1 1 1 0"
-                      contype="0"
-                      conaffinity="0"/>
-
+              <camera name="wrist_cam" mode="targetbody" target="wrist_camera_target"
+                      pos="0.08 0 0.08" fovy="75"/>
+              <body name="wrist_camera_target" pos="0.30 0 -0.25">
+                <geom name="wrist_camera_target_geom" type="sphere" size="0.005"
+                      rgba="1 1 1 0" contype="0" conaffinity="0"/>
               </body>
 
+              <!-- 3-prong gripper -->
+              <body name="gripper_base" pos="0.08 0 0">
+                <geom name="gripper_hub" type="cylinder" pos="0 0 0"
+                      size="0.045 0.02" euler="0 90 0" rgba="0.2 0.2 0.2 1"/>
 
-              <!-- ================================================= -->
-              <!-- 3-PRONG GRIPPER                                   -->
-              <!-- ================================================= -->
+                <geom name="gripper_spoke_1" type="box" pos="0 0.025 0"
+                      size="0.02 0.025 0.012" rgba="0.2 0.2 0.2 1"/>
+                <geom name="gripper_spoke_2" type="box" pos="0 -0.0125 0.02165"
+                      size="0.02 0.025 0.012" euler="-60 0 0" rgba="0.2 0.2 0.2 1"/>
+                <geom name="gripper_spoke_3" type="box" pos="0 -0.0125 -0.02165"
+                      size="0.02 0.025 0.012" euler="60 0 0" rgba="0.2 0.2 0.2 1"/>
 
-              <body name="gripper_base"
-                    pos="0.08 0 0">
+                <site name="gripper_site" pos="0 0 0" size="0.006" rgba="1 0 1 1"/>
+                <site name="grasp_site" pos="0.07 0 0" size="0.008" rgba="0 1 1 1"/>
 
-
-                <!-- =============================================== -->
-                <!-- CENTRAL HUB                                     -->
-                <!-- Local +X = forward / grasp direction            -->
-                <!-- Prongs arranged in local Y-Z plane              -->
-                <!-- =============================================== -->
-
-                <geom name="gripper_hub"
-                      type="cylinder"
-                      pos="0 0 0"
-                      size="0.045 0.02"
-                      euler="0 90 0"
-                      rgba="0.2 0.2 0.2 1"/>
-
-
-                <!-- =============================================== -->
-                <!-- THREE SUPPORT SPOKES                            -->
-                <!-- =============================================== -->
-
-                <!-- Spoke 1: toward +Y -->
-                <geom name="gripper_spoke_1"
-                      type="box"
-                      pos="0 0.025 0"
-                      size="0.02 0.025 0.012"
-                      rgba="0.2 0.2 0.2 1"/>
-
-
-                <!-- Spoke 2: toward -Y, +Z -->
-                <geom name="gripper_spoke_2"
-                      type="box"
-                      pos="0 -0.0125 0.02165"
-                      size="0.02 0.025 0.012"
-                      euler="-60 0 0"
-                      rgba="0.2 0.2 0.2 1"/>
-
-
-                <!-- Spoke 3: toward -Y, -Z -->
-                <geom name="gripper_spoke_3"
-                      type="box"
-                      pos="0 -0.0125 -0.02165"
-                      size="0.02 0.025 0.012"
-                      euler="60 0 0"
-                      rgba="0.2 0.2 0.2 1"/>
-
-
-                <!-- =============================================== -->
-                <!-- REFERENCE SITES                                 -->
-                <!-- =============================================== -->
-
-                <!-- Wrist/end-effector reference -->
-                <site name="gripper_site"
-                      pos="0 0 0"
-                      size="0.006"
-                      rgba="1 0 1 1"/>
-
-                <!-- Centre where grasped object should sit -->
-                <site name="grasp_site"
-                      pos="0.07 0 0"
-                      size="0.008"
-                      rgba="0 1 1 1"/>
-
-
-                <!-- =============================================== -->
-                <!-- PRONG 1                                         -->
-                <!-- 0 degrees: +Y                                   -->
-                <!-- =============================================== -->
-
-                <body name="finger_1"
-                      pos="0.04 0.045 0">
-
-                  <!--
-                    q = 0      : closed
-                    q = 0.025  : open
-
-                    Positive control moves outward along +Y.
-                  -->
-                  <joint name="finger_1_joint"
-                         type="slide"
-                         axis="0 1 0"
-                         range="0 0.025"
-                         damping="5"
-                         armature="0.01"/>
-
-                  <geom name="finger_1_geom"
-                        type="box"
-                        size="0.05 0.010 0.015"
-                        rgba="0.1 0.1 0.1 1"
-                        friction="3.0 0.5 0.2"/>
-
+                <body name="finger_1" pos="0.04 0.045 0">
+                  <joint name="finger_1_joint" type="slide" axis="0 1 0"
+                         range="0 0.025" damping="5" armature="0.01"/>
+                  <geom name="finger_1_geom" type="box" size="0.05 0.010 0.015"
+                        rgba="0.1 0.1 0.1 1" friction="8.0 0.05 0.01"/>
                 </body>
 
-
-                <!-- =============================================== -->
-                <!-- PRONG 2                                         -->
-                <!-- 120 degrees                                     -->
-                <!-- =============================================== -->
-
-                <body name="finger_2"
-                      pos="0.04 -0.0225 0.0390">
-
-                  <!--
-                    Outward radial direction:
-                    Y = -0.5
-                    Z = +0.866
-                  -->
-                  <joint name="finger_2_joint"
-                         type="slide"
-                         axis="0 -0.5 0.866"
-                         range="0 0.025"
-                         damping="5"
-                         armature="0.01"/>
-
-                  <!--
-                    Rotate cross-section so the flat inner face
-                    points approximately toward the grasp centre.
-                  -->
-                  <geom name="finger_2_geom"
-                        type="box"
-                        size="0.05 0.010 0.015"
-                        euler="30 0 0"
-                        rgba="0.1 0.1 0.1 1"
-                        friction="3.0 0.5 0.2"/>
-
+                <body name="finger_2" pos="0.04 -0.0225 0.0390">
+                  <joint name="finger_2_joint" type="slide" axis="0 -0.5 0.866"
+                         range="0 0.025" damping="5" armature="0.01"/>
+                  <geom name="finger_2_geom" type="box" size="0.05 0.010 0.015"
+                        euler="30 0 0" rgba="0.1 0.1 0.1 1" friction="8.0 0.05 0.01"/>
                 </body>
 
-
-                <!-- =============================================== -->
-                <!-- PRONG 3                                         -->
-                <!-- 240 degrees                                     -->
-                <!-- =============================================== -->
-
-                <body name="finger_3"
-                      pos="0.04 -0.0225 -0.0390">
-
-                  <!--
-                    Outward radial direction:
-                    Y = -0.5
-                    Z = -0.866
-                  -->
-                  <joint name="finger_3_joint"
-                         type="slide"
-                         axis="0 -0.5 -0.866"
-                         range="0 0.025"
-                         damping="5"
-                         armature="0.01"/>
-
-                  <geom name="finger_3_geom"
-                        type="box"
-                        size="0.05 0.010 0.015"
-                        euler="-30 0 0"
-                        rgba="0.1 0.1 0.1 1"
-                        friction="3.0 0.5 0.2"/>
-
+                <body name="finger_3" pos="0.04 -0.0225 -0.0390">
+                  <joint name="finger_3_joint" type="slide" axis="0 -0.5 -0.866"
+                         range="0 0.025" damping="5" armature="0.01"/>
+                  <geom name="finger_3_geom" type="box" size="0.05 0.010 0.015"
+                        euler="-30 0 0" rgba="0.1 0.1 0.1 1" friction="8.0 0.05 0.01"/>
                 </body>
-
-
               </body>
-              <!-- End gripper_base -->
-
-
             </body>
-            <!-- End wrist -->
-
           </body>
-          <!-- End link3 -->
-
         </body>
-        <!-- End link2 -->
-
       </body>
-      <!-- End link1 -->
-
     </body>
-    <!-- End base -->
 
-
-    <!-- ================================================= -->
-    <!-- OVERHEAD CAMERA                                   -->
-    <!-- ================================================= -->
-
-    <camera name="overhead_cam"
-            pos="0.4 0.1 1.3"
-            euler="0 0 0"
-            fovy="60"/>
-
+    <camera name="overhead_cam" pos="0.4 0.1 1.3" euler="0 0 0" fovy="60"/>
   </worldbody>
 
-
-  <!-- ================================================= -->
-  <!-- CONTACT SETTINGS                                  -->
-  <!-- ================================================= -->
-
   <contact>
-
-    <!--
-      base and link1 overlap slightly around the
-      shoulder-pan joint. Ignore this internal contact.
-    -->
-    <exclude body1="base"
-             body2="link1"/>
-
+    <exclude body1="base" body2="link1"/>
   </contact>
 
-
-  <!-- ================================================= -->
-  <!-- ACTUATORS                                         -->
-  <!-- ================================================= -->
+ 
 
   <actuator>
+    <position name="act_shoulder_pan" joint="shoulder_pan" kp="500" kv="50"
+              ctrlrange="-3.1416 3.1416" forcerange="-200 200"/>
+    <position name="act_shoulder_lift" joint="shoulder_lift" kp="500" kv="50"
+              ctrlrange="-1.5708 1.5708" forcerange="-200 200"/>
+    <position name="act_elbow" joint="elbow" kp="400" kv="40"
+              ctrlrange="-2.618 2.618" forcerange="-150 150"/>
+    <position name="act_wrist_pitch" joint="wrist_pitch" kp="250" kv="25"
+              ctrlrange="-1.5708 1.5708" forcerange="-100 100"/>
 
-    <!-- Arm -->
-
-    <position name="act_shoulder_pan"
-              joint="shoulder_pan"
-              kp="500"
-              kv="50"
-              ctrlrange="-3.1416 3.1416"
-              forcerange="-200 200"/>
-
-    <position name="act_shoulder_lift"
-              joint="shoulder_lift"
-              kp="500"
-              kv="50"
-              ctrlrange="-1.5708 1.5708"
-              forcerange="-200 200"/>
-
-    <position name="act_elbow"
-              joint="elbow"
-              kp="400"
-              kv="40"
-              ctrlrange="-2.618 2.618"
-              forcerange="-150 150"/>
-
-    <position name="act_wrist_pitch"
-              joint="wrist_pitch"
-              kp="250"
-              kv="25"
-              ctrlrange="-1.5708 1.5708"
-              forcerange="-100 100"/>
-
-
-    <!-- 3-prong gripper -->
-
-    <position name="act_finger_1"
-              joint="finger_1_joint"
-              kp="200"
-              kv="10"
-              ctrlrange="0 0.025"
-              forcerange="-50 50"/>
-
-    <position name="act_finger_2"
-              joint="finger_2_joint"
-              kp="200"
-              kv="10"
-              ctrlrange="0 0.025"
-              forcerange="-50 50"/>
-
-    <position name="act_finger_3"
-              joint="finger_3_joint"
-              kp="200"
-              kv="10"
-              ctrlrange="0 0.025"
-              forcerange="-50 50"/>
-
+    <position name="act_finger_1" joint="finger_1_joint" kp="200" kv="10"
+              ctrlrange="0 0.025" forcerange="-50 50"/>
+    <position name="act_finger_2" joint="finger_2_joint" kp="200" kv="10"
+              ctrlrange="0 0.025" forcerange="-50 50"/>
+    <position name="act_finger_3" joint="finger_3_joint" kp="200" kv="10"
+              ctrlrange="0 0.025" forcerange="-50 50"/>
   </actuator>
-
-
 </mujoco>
