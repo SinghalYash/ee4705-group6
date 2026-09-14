@@ -23,7 +23,6 @@ ARM_ACTUATORS = [
 GRIPPER_OPEN = 0.025
 GRIPPER_CLOSED = 0.0
 
-STONE_RADIUS = 0.04
 
 # Cartesian controller settings
 POSITION_TOLERANCE = 0.01   # 1 cm
@@ -547,8 +546,6 @@ def close_gripper_until_contact(
                 object_distance,
             )
 
-            return False, GRIPPER_OPEN
-
         if (
             left_contact_count >= required_contact_count
             and right_contact_count >= required_contact_count
@@ -580,6 +577,29 @@ def close_gripper_until_contact(
             )
 
             return True, contact_command
+
+        time.sleep(model.opt.timestep)
+
+    # If all stability steps finish without success:
+    print("\nGRASP FAILED")
+
+    print(
+        "Sufficient left/right contact "
+        "was not achieved."
+    )
+
+    print(
+        "Left contact samples:",
+        left_contact_count,
+    )
+
+    print(
+        "Right contact samples:",
+        right_contact_count,
+    )
+
+    return False, GRIPPER_OPEN
+
 
 def main():
 
@@ -674,7 +694,7 @@ def main():
     ])
 
     # Stage 2:
-    # Move horizontally until directly above stone.
+    # Move horizontally until directly above box.
     above_box = np.array([
         object_pos[0],
         object_pos[1],
@@ -745,7 +765,7 @@ def main():
         else:
 
             # ==============================================
-            # STAGE 2 — ABOVE STONE
+            # STAGE 2 — ABOVE BOX
             # ==============================================
 
             joint_commands, ok = move_cartesian(
@@ -753,20 +773,20 @@ def main():
                 data,
                 viewer,
                 grasp_site_id,
-                above_stone,
+                above_box,
                 qpos_ids,
                 dof_ids,
                 actuator_ids,
                 left_finger,
                 right_finger,
                 joint_commands,
-                label="STAGE 2: ABOVE STONE",
+                label="STAGE 2: ABOVE BOX",
             )
 
             if not ok:
                 print(
                     "\nStopping: could not reach "
-                    "above-stone pose."
+                    "above-box pose."
                 )
 
             else:
