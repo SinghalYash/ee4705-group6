@@ -1,9 +1,14 @@
 import time
+from pathlib import Path
+
 import mujoco
 import mujoco.viewer
 
 
-MODEL_PATH = "scene.xml"
+MODEL_PATH = str(
+    Path(__file__).resolve().parent.parent
+    / "scene.xml"
+)
 
 GRIPPER_OPEN = 0.025
 
