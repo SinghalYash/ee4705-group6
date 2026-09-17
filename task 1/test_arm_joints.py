@@ -2,10 +2,14 @@ import time
 import numpy as np
 import mujoco
 import mujoco.viewer
+from pathlib import Path
 
 
-MODEL_PATH = "scene.xml"
 
+MODEL_PATH = str(
+    Path(__file__).resolve().parent.parent
+    / "scene.xml"
+)
 TESTS = [
     ("shoulder_pan",  "act_shoulder_pan",  -0.40),
     ("shoulder_lift", "act_shoulder_lift",  0.30),
