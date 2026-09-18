@@ -5,6 +5,41 @@ from robot_skills import (
     ActionResult,
 )
 
+# ==========================================================
+# TASK 3 -> TASK 4 NAME NORMALISATION
+# ==========================================================
+
+OBJECT_ALIASES = {
+
+    # Box
+    "box": "box",
+    "blue box": "box",
+    "blue_box": "box",
+    "cube": "box",
+    "blue cube": "box",
+
+    # Cylinder
+    "cylinder": "cylinder",
+    "green cylinder": "cylinder",
+    "green_cylinder": "cylinder",
+
+    # Stone
+    "stone": "stone",
+    "rock": "stone",
+    "grey stone": "stone",
+    "gray stone": "stone",
+    "sphere": "stone",
+}
+
+TARGET_ALIASES = {
+
+    "red_area": "red_area",
+    "red area": "red_area",
+    "red zone": "red_area",
+    "red region": "red_area",
+    "red target": "red_area",
+    "target area": "red_area",
+}
 
 # ==========================================================
 # EXECUTION REPORT
@@ -65,6 +100,45 @@ class Task4Executor:
         self.last_placed_object = None
 
         self.execution_results = []
+
+    # ======================================================
+    # NAME NORMALISATION
+    # ======================================================
+
+    def normalise_object_name(
+        self,
+        name,
+    ):
+
+        if name is None:
+            return None
+
+        key = str(
+            name
+        ).strip().lower()
+
+        return OBJECT_ALIASES.get(
+            key,
+            key,
+        )
+
+
+    def normalise_target_name(
+        self,
+        name,
+    ):
+
+        if name is None:
+            return None
+
+        key = str(
+            name
+        ).strip().lower()
+
+        return TARGET_ALIASES.get(
+            key,
+            key,
+        )
 
     # ======================================================
     # START
@@ -145,8 +219,12 @@ class Task4Executor:
 
         if skill == "APPROACH":
 
-            target = action.get(
-                "target"
+            target = (
+                self.normalise_object_name(
+                    action.get(
+                        "target"
+                    )
+                )
             )
 
             if not target:
@@ -195,8 +273,12 @@ class Task4Executor:
 
         if skill == "GRASP":
 
-            target = action.get(
-                "target"
+            target = (
+                self.normalise_object_name(
+                    action.get(
+                        "target"
+                    )
+                )
             )
 
             if not target:
@@ -209,6 +291,59 @@ class Task4Executor:
                         "a target"
                     ),
                 )
+
+            # ------------------------------------------
+            # Ensure pre-grasp state
+            # ------------------------------------------
+            #
+            # Task 3 may generate:
+            #
+            # APPROACH -> GRASP
+            #
+            # without an explicit REACH action.
+            #
+            # Task 4 therefore ensures that the physical
+            # precondition for GRASP is satisfied.
+
+            if (
+                self.robot.current_object
+                != target
+            ):
+
+                print(
+                    "\nGRASP precondition "
+                    "not yet satisfied."
+                )
+
+                print(
+                    "Executing REACH "
+                    "automatically..."
+                )
+
+                reach_result = (
+                    self.robot.reach(
+                        target
+                    )
+                )
+
+                if not reach_result.success:
+
+                    return ActionResult(
+                        success=False,
+                        skill="GRASP",
+                        message=(
+                            "Could not reach "
+                            f"{target} before "
+                            "grasp"
+                        ),
+                        error=(
+                            reach_result.error
+                        ),
+                    )
+
+            # ------------------------------------------
+            # Recovery-enabled grasp
+            # ------------------------------------------
 
             result = (
                 self.robot.grasp_with_recovery(
@@ -230,8 +365,12 @@ class Task4Executor:
 
         if skill == "MOVE_TO":
 
-            target = action.get(
-                "target"
+            target = (
+                self.normalise_target_name(
+                    action.get(
+                        "target"
+                    )
+                )
             )
 
             if not target:
@@ -263,51 +402,32 @@ class Task4Executor:
 
         if skill == "PLACE":
 
-            object_name = action.get(
-                "object"
+            object_name = (
+                self.normalise_object_name(
+                    action.get(
+                        "object"
+                    )
+                )
             )
 
-            target = action.get(
-                "target"
+            target = (
+                self.normalise_target_name(
+                    action.get(
+                        "target"
+                    )
+                )
             )
 
-            # If Task 3 omitted object because the
-            # previously grasped object is implied,
-            # recover it from execution context.
             if not object_name:
 
                 object_name = (
                     self.last_grasped_object
                 )
 
-            # Likewise use previous MOVE_TO target
-            # if PLACE omits it.
             if not target:
 
                 target = (
                     self.last_target_region
-                )
-
-            if not object_name:
-
-                return ActionResult(
-                    success=False,
-                    skill="PLACE",
-                    message=(
-                        "PLACE requires an "
-                        "object"
-                    ),
-                )
-
-            if not target:
-
-                return ActionResult(
-                    success=False,
-                    skill="PLACE",
-                    message=(
-                        "PLACE requires "
-                        "a target"
-                    ),
                 )
 
             result = self.robot.place(
@@ -352,18 +472,23 @@ class Task4Executor:
                 reason
             )
 
+
         # ==================================================
+        # SEARCH
+        # ==================================================
+
+                # ==================================================
         # SEARCH
         # ==================================================
 
         if skill == "SEARCH":
 
-            # Task 2 vision is not integrated yet.
-            #
-            # For now, SEARCH checks whether the requested
-            # object exists in simulator state.
-            target = action.get(
-                "target"
+            target = (
+                self.normalise_object_name(
+                    action.get(
+                        "target"
+                    )
+                )
             )
 
             if not target:
@@ -377,41 +502,9 @@ class Task4Executor:
                     ),
                 )
 
-            try:
-
-                position = (
-                    self.robot.get_object_position(
-                        target
-                    )
-                )
-
-            except Exception as error:
-
-                return ActionResult(
-                    success=False,
-                    skill="SEARCH",
-                    message=str(error),
-                )
-
-            print(
-                "SEARCH simulator-state result:"
+            return self.robot.search(
+                target
             )
-
-            print(
-                target,
-                "=",
-                position,
-            )
-
-            return ActionResult(
-                success=True,
-                skill="SEARCH",
-                message=(
-                    f"{target} found in "
-                    f"simulator state"
-                ),
-            )
-
         # ==================================================
         # UNKNOWN SKILL
         # ==================================================
