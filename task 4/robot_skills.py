@@ -1981,6 +1981,7 @@ class RobotSkills:
             message="Gripper opened",
         )
 
+    
     # ======================================================
     # RECOVERY — RETREAT
     # ======================================================
@@ -2031,51 +2032,23 @@ class RobotSkills:
 
         if result.success:
 
-            if (
-                self.search_used
-                and self.search_attempts
-                == REVEAL_TARGET_AFTER_VIEWPOINT
-            ):
+            print(
+                "[RECOVERY] Retreat successful."
+            )
 
-                print(
-                    "\n========================================"
-                )
-                print(
-                    "SEARCH RECOVERY SUCCESS TEST PASSED"
-                )
-                print(
-                    "========================================"
-                )
+            return ActionResult(
+                success=True,
+                skill="RETREAT",
+                message=(
+                    "Recovery retreat successful"
+                ),
+                error=result.error,
+            )
 
-        else:
+        print(
+            "[RECOVERY] Retreat failed."
+        )
 
-            if (
-                self.search_used
-                and self.safe_stopped
-                and REVEAL_TARGET_AFTER_VIEWPOINT is None
-            ):
-
-                print(
-                    "\n========================================"
-                )
-                print(
-                    "SEARCH FAILURE / SAFE-STOP TEST PASSED"
-                )
-                print(
-                    "========================================"
-                )
-
-            else:
-
-                print(
-                    "\n========================================"
-                )
-                print(
-                    "SEARCH RECOVERY TEST FAILED"
-                )
-                print(
-                    "========================================"
-                )
         return ActionResult(
             success=False,
             skill="RETREAT",
@@ -2084,6 +2057,7 @@ class RobotSkills:
             ),
             error=result.error,
         )
+    
 
     # ======================================================
     # SAFE STOP

@@ -23,7 +23,7 @@ from robot_skills_evaluation import (
 # False:
 #     Run all 12 evaluation trials.
 
-SMOKE_TEST_ONLY = True
+SMOKE_TEST_ONLY = False
 
 SHOW_VIEWER = False
 REALTIME = False
@@ -313,7 +313,7 @@ ALL_TRIAL_CONFIGS = [
 if SMOKE_TEST_ONLY:
 
     TRIAL_CONFIGS = [
-        ALL_TRIAL_CONFIGS[3]
+        ALL_TRIAL_CONFIGS[10]
     ]
 
 else:

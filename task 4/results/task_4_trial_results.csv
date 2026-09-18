@@ -1,2 +1,13 @@
 trial,configuration,object,requested_object_x,requested_object_y,object_start_x,object_start_y,object_start_z,shoulder_pan_start,shoulder_lift_start,elbow_start,wrist_pitch_start,approach_success,reach_success,grasp_success,grasp_attempts,first_attempt_grasp_success,grasp_recovery_used,verify_grasp_success,move_success,place_success,verify_place_success,placement_error_m,execution_success,failure_stage,failure_reason
-1,box_shift_xy,box,0.34,-0.06,,,,,,,,False,False,False,0,False,False,False,False,False,False,,False,UNHANDLED_EXCEPTION,name 'robot' is not defined
+1,box_baseline,box,0.32,-0.08,0.32,-0.08,0.02936282378312449,0.0,0.0,0.0,0.0,True,True,True,1,True,False,True,True,True,True,0.01964443737440671,True,,
+2,box_shift_x,box,0.3,-0.08,0.3,-0.08,0.02936282378312449,0.04,0.0,0.0,0.0,True,True,True,1,True,False,True,True,True,True,0.006263121855891763,True,,
+3,box_shift_y,box,0.32,-0.1,0.32,-0.1,0.02936282378312449,0.0,-0.04,0.0,0.0,True,True,True,1,True,False,True,True,True,True,0.018025368867788275,True,,
+4,box_shift_xy,box,0.34,-0.06,0.34,-0.06,0.02936282378312449,-0.03,0.03,0.02,0.0,True,True,True,2,False,True,True,True,True,True,0.018602957364188887,True,,
+5,cylinder_baseline,cylinder,0.3,0.08,0.3,0.08,0.049252562143988085,0.0,0.0,0.0,0.0,True,True,True,1,True,False,True,True,True,True,0.029667152908841043,True,,
+6,cylinder_shift_x,cylinder,0.28,0.08,0.28,0.08,0.049252562143988085,0.04,0.0,0.0,0.0,True,True,True,2,False,True,True,True,True,True,0.0033376370985318295,True,,
+7,cylinder_shift_y,cylinder,0.3,0.06,0.3,0.06,0.049252562143988085,0.0,0.04,0.0,0.0,True,True,True,1,True,False,True,True,True,True,0.011260710797875358,True,,
+8,cylinder_shift_xy,cylinder,0.32,0.06,0.32,0.06,0.049252562143988085,-0.03,0.03,-0.02,0.02,True,True,True,1,True,False,True,True,True,True,0.009293489032943662,True,,
+9,stone_baseline,stone,0.28,-0.18,0.28,-0.18,0.03803800000000006,0.0,0.0,0.0,0.0,True,True,True,1,True,False,True,True,True,True,0.0083708287559618,True,,
+10,stone_shift_x,stone,0.3,-0.18,0.3,-0.18,0.03803800000000006,0.03,0.0,0.0,0.0,True,True,True,1,True,False,True,True,True,True,0.06445952923572948,True,,
+11,stone_shift_y,stone,0.28,-0.16,0.28,-0.16,0.03803800000000006,0.0,-0.03,0.02,0.0,True,True,False,3,False,True,False,False,False,False,,False,GRASP_RECOVERY_EXHAUSTED,Unable to reach stone for grasp
+12,stone_shift_xy,stone,0.3,-0.16,0.3,-0.16,0.03803800000000006,-0.02,0.02,-0.02,0.02,True,True,True,1,True,False,True,True,True,True,0.037907102063550004,True,,
