@@ -12,8 +12,14 @@ import time
 import cv2
 import mujoco
 import mujoco.viewer
+from pathlib import Path
 
-MODEL_PATH = "scene.xml"
+
+MODEL_PATH = str(
+    Path(__file__).resolve().parent.parent
+    / "scene.xml"
+)
+
 
 
 def set_ctrl(model, data, actuator_name, value):
