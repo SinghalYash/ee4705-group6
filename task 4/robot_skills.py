@@ -1979,6 +1979,64 @@ class RobotSkills:
         )
 
     # ======================================================
+    # NORMAL TASK STOP
+    # ======================================================
+
+    def stop(
+        self,
+        reason="task complete",
+    ):
+        """
+        Normal successful task termination.
+
+        This is different from safe_stop():
+
+        stop()
+            = expected completion
+
+        safe_stop()
+            = abnormal failure
+        """
+
+        print(
+            "\n========================================"
+        )
+
+        print(
+            "TASK STOP"
+        )
+
+        print(
+            "========================================"
+        )
+
+        print(
+            "Reason:",
+            reason,
+        )
+
+        mujoco.mj_forward(
+            self.model,
+            self.data,
+        )
+
+        # Hold the robot at its current physical pose.
+        self.joint_commands = np.array([
+            self.data.qpos[qid]
+            for qid in self.qpos_ids
+        ])
+
+        self.safe_stopped = False
+        self.last_action_success = True
+        self.last_failure_reason = None
+
+        return ActionResult(
+            success=True,
+            skill="STOP",
+            message=reason,
+        )
+
+    # ======================================================
     # GRASP WITH RECOVERY
     # ======================================================
 
@@ -2739,9 +2797,26 @@ class RobotSkills:
         # Closed-loop placement verification
         # ----------------------------------------------
 
-        return self.verify_place(
+        verify_result = self.verify_place(
             object_name,
             target_name,
+        )
+
+        # PLACE itself reports whether the physical
+        # placement succeeded. An explicit VERIFY action
+        # can still check the state again afterwards.
+        return ActionResult(
+            success=verify_result.success,
+            skill="PLACE",
+            message=(
+                f"{object_name} placed and verified "
+                f"in {target_name}"
+                if verify_result.success
+                else
+                f"{object_name} placement in "
+                f"{target_name} failed verification"
+            ),
+            error=verify_result.error,
         )
 
     # ======================================================

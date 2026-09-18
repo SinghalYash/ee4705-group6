@@ -20,7 +20,7 @@ from openai import OpenAI
 # MODEL = "gpt-5-mini"
 
 # --- Qwen (Alibaba Cloud, Singapore region, free quota) ---
-client = OpenAI(api_key=os.environ["DASHseCOPE_API_KEY"],
+client = OpenAI(api_key=os.environ["DASHSCOPE_API_KEY"],
                  base_url="https://dashscope-intl.aliyuncs.com/compatible-mode/v1")
 MODEL = "qwen3-vl-flash"
 
