@@ -109,15 +109,43 @@ SEARCH_WAYPOINTS = [
 # OBJECT / TARGET SETTINGS
 # ==========================================================
 
-# Current Task 4 manipulation test uses the blue box.
-BOX_HALF_HEIGHT = 0.03
-BOX_HALF_WIDTH = 0.03
-
 TARGET_RADIUS = 0.12
-
 RELEASE_CLEARANCE = 0.008
 
 
+# Object dimensions are taken directly from scene.xml.
+#
+# placement_half_height:
+#     Height of object centre above the floor when resting.
+#
+# placement_radius:
+#     Conservative XY footprint used when determining
+#     whether the whole object is inside the target area.
+#
+# pregrasp_offset:
+#     Desired vertical offset between object centre and
+#     grasp_site during REACH.
+
+OBJECT_PROPERTIES = {
+
+    "stone": {
+        "placement_half_height": 0.04,
+        "placement_radius": 0.04,
+        "pregrasp_offset": 0.025,
+    },
+
+    "box": {
+        "placement_half_height": 0.03,
+        "placement_radius": 0.03,
+        "pregrasp_offset": 0.025,
+    },
+
+    "cylinder": {
+        "placement_half_height": 0.05,
+        "placement_radius": 0.03,
+        "pregrasp_offset": 0.025,
+    },
+}
 # ==========================================================
 # SCENE MAPPING
 # ==========================================================
@@ -1292,11 +1320,24 @@ class RobotSkills:
             object_pos,
         )
 
+         
+
+        object_properties = (
+            OBJECT_PROPERTIES[
+                target_name
+            ]
+        )
+
         pregrasp_target = np.array([
             object_pos[0],
             object_pos[1],
-            object_pos[2] + 0.025,
+            object_pos[2]
+            + object_properties[
+                "pregrasp_offset"
+            ],
         ])
+
+        
 
         result = self.move_cartesian(
             pregrasp_target,
@@ -1990,19 +2031,51 @@ class RobotSkills:
 
         if result.success:
 
-            print(
-                "[RECOVERY] Retreat successful."
-            )
+            if (
+                self.search_used
+                and self.search_attempts
+                == REVEAL_TARGET_AFTER_VIEWPOINT
+            ):
 
-            return ActionResult(
-                success=True,
-                skill="RETREAT",
-                message=(
-                    "Recovery retreat successful"
-                ),
-                error=result.error,
-            )
+                print(
+                    "\n========================================"
+                )
+                print(
+                    "SEARCH RECOVERY SUCCESS TEST PASSED"
+                )
+                print(
+                    "========================================"
+                )
 
+        else:
+
+            if (
+                self.search_used
+                and self.safe_stopped
+                and REVEAL_TARGET_AFTER_VIEWPOINT is None
+            ):
+
+                print(
+                    "\n========================================"
+                )
+                print(
+                    "SEARCH FAILURE / SAFE-STOP TEST PASSED"
+                )
+                print(
+                    "========================================"
+                )
+
+            else:
+
+                print(
+                    "\n========================================"
+                )
+                print(
+                    "SEARCH RECOVERY TEST FAILED"
+                )
+                print(
+                    "========================================"
+                )
         return ActionResult(
             success=False,
             skill="RETREAT",
@@ -2711,8 +2784,16 @@ class RobotSkills:
         # Placement pose
         # ----------------------------------------------
 
+        object_properties = (
+            OBJECT_PROPERTIES[
+                object_name
+            ]
+        )
+
         desired_object_z = (
-            BOX_HALF_HEIGHT
+            object_properties[
+                "placement_half_height"
+            ]
             + RELEASE_CLEARANCE
         )
 
@@ -2967,10 +3048,19 @@ class RobotSkills:
             object_pos[:2]
             - target_pos[:2]
         )
+ 
+
+        object_properties = (
+            OBJECT_PROPERTIES[
+                object_name
+            ]
+        )
 
         placement_limit = (
             TARGET_RADIUS
-            - BOX_HALF_WIDTH
+            - object_properties[
+                "placement_radius"
+            ]
         )
 
         success = (

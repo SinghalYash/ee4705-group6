@@ -1,0 +1,2 @@
+trial,configuration,object,requested_object_x,requested_object_y,object_start_x,object_start_y,object_start_z,shoulder_pan_start,shoulder_lift_start,elbow_start,wrist_pitch_start,approach_success,reach_success,grasp_success,grasp_attempts,first_attempt_grasp_success,grasp_recovery_used,verify_grasp_success,move_success,place_success,verify_place_success,placement_error_m,execution_success,failure_stage,failure_reason
+1,box_shift_xy,box,0.34,-0.06,,,,,,,,False,False,False,0,False,False,False,False,False,False,,False,UNHANDLED_EXCEPTION,name 'robot' is not defined
