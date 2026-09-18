@@ -68,6 +68,42 @@ MAX_GRASP_ATTEMPTS = 3
 
 RECOVERY_RETREAT_HEIGHT = 0.10
 
+# ==========================================================
+# SEARCH RECOVERY SETTINGS
+# ==========================================================
+
+# Safe Cartesian viewpoints used while searching.
+#
+# These are currently gripper/wrist viewpoints.
+# When Task 2 is integrated, the wrist-camera detector
+# will check for the requested object at each viewpoint.
+
+SEARCH_WAYPOINTS = [
+    np.array([
+        0.28,
+        -0.18,
+        0.30,
+    ]),
+
+    np.array([
+        0.32,
+        -0.08,
+        0.30,
+    ]),
+
+    np.array([
+        0.30,
+        0.05,
+        0.30,
+    ]),
+
+    np.array([
+        0.24,
+        0.12,
+        0.30,
+    ]),
+]
+
 
 # ==========================================================
 # OBJECT / TARGET SETTINGS
@@ -299,6 +335,40 @@ class RobotSkills:
         self.safe_stopped = False
 
         # --------------------------------------------------
+        # Search recovery state
+        # --------------------------------------------------
+
+        self.search_used = False
+        self.search_attempts = 0
+
+        # --------------------------------------------------
+        # Temporary visibility test controls
+        # --------------------------------------------------
+        #
+        # None:
+        #     use normal temporary simulator visibility
+        #
+        # False:
+        #     pretend Task 2 cannot currently see target
+        #
+        # True:
+        #     pretend target is visible
+        #
+        # These are ONLY for testing the search recovery
+        # before Task 2 vision is integrated.
+
+        self.visibility_override = None
+
+        # If set to an integer, the target will become
+        # "visible" after this many search viewpoints.
+        #
+        # Example:
+        #     2 = target found at viewpoint 2
+        #
+        # This is test-only.
+        self.search_reveal_after = None
+
+        # --------------------------------------------------
         # Viewer
         # --------------------------------------------------
 
@@ -412,6 +482,58 @@ class RobotSkills:
         return self.data.geom_xpos[
             geom_id
         ].copy()
+
+    # ======================================================
+    # TARGET VISIBILITY
+    # ======================================================
+
+    def is_target_visible(
+        self,
+        target_name,
+    ):
+        """
+        Return whether the requested target is currently
+        visible.
+
+        CURRENT IMPLEMENTATION:
+            simulator-state / test visibility
+
+        FUTURE TASK 2 IMPLEMENTATION:
+            wrist-camera object detection
+
+        Keeping this as a separate interface means Task 2
+        can later replace the visibility source without
+        changing the Task 4 recovery logic.
+        """
+
+        # ----------------------------------------------
+        # Test override
+        # ----------------------------------------------
+
+        if (
+            self.visibility_override
+            is not None
+        ):
+
+            return bool(
+                self.visibility_override
+            )
+
+        # ----------------------------------------------
+        # Temporary simulator-state fallback
+        # ----------------------------------------------
+
+        try:
+
+            self.get_object_position(
+                target_name
+            )
+
+            return True
+
+        except Exception:
+
+            return False
 
     # ======================================================
     # CONTACT DETECTION
@@ -2908,4 +3030,380 @@ class RobotSkills:
                 f"{target_name}"
             ),
             error=xy_error,
+        )
+
+    # ======================================================
+    # TASK 4 RECOVERY — SEARCH
+    # ======================================================
+
+    def search(
+        self,
+        target_name,
+        max_search_poses=None,
+    ):
+        """
+        Search for a target by moving through a sequence
+        of safe Cartesian viewpoints.
+
+        At each viewpoint the system checks whether the
+        target is visible.
+
+        If the target is found, its current simulator
+        position is read again before execution continues.
+
+        If all viewpoints are exhausted, SEARCH fails.
+        """
+
+        print(
+            "\n========================================"
+        )
+
+        print(
+            f"SEARCH FOR TARGET: "
+            f"{target_name}"
+        )
+
+        print(
+            "========================================"
+        )
+
+        self.search_used = True
+        self.search_attempts = 0
+
+        if max_search_poses is None:
+
+            max_search_poses = len(
+                SEARCH_WAYPOINTS
+            )
+
+        max_search_poses = min(
+            max_search_poses,
+            len(SEARCH_WAYPOINTS),
+        )
+
+        # ----------------------------------------------
+        # Check current view first
+        # ----------------------------------------------
+
+        if self.is_target_visible(
+            target_name
+        ):
+
+            try:
+
+                position = (
+                    self.get_object_position(
+                        target_name
+                    )
+                )
+
+            except Exception:
+
+                position = None
+
+            print(
+                "Target already visible."
+            )
+
+            if position is not None:
+
+                print(
+                    "Target position:",
+                    position,
+                )
+
+            return ActionResult(
+                success=True,
+                skill="SEARCH",
+                message=(
+                    f"{target_name} "
+                    f"already visible"
+                ),
+            )
+
+        print(
+            "Target not visible "
+            "from current viewpoint."
+        )
+
+        # ----------------------------------------------
+        # Search viewpoints
+        # ----------------------------------------------
+
+        for index in range(
+            max_search_poses
+        ):
+
+            viewpoint_number = (
+                index + 1
+            )
+
+            waypoint = (
+                SEARCH_WAYPOINTS[
+                    index
+                ].copy()
+            )
+
+            self.search_attempts = (
+                viewpoint_number
+            )
+
+            print(
+                "\n----------------------------------------"
+            )
+
+            print(
+                f"SEARCH VIEWPOINT "
+                f"{viewpoint_number}/"
+                f"{max_search_poses}"
+            )
+
+            print(
+                "----------------------------------------"
+            )
+
+            print(
+                "Search waypoint:",
+                waypoint,
+            )
+
+            result = self.move_cartesian(
+                waypoint,
+                label=(
+                    f"SEARCH: VIEWPOINT "
+                    f"{viewpoint_number}"
+                ),
+                tolerance=0.015,
+                max_steps=2500,
+                gripper_command=(
+                    GRIPPER_OPEN
+                ),
+            )
+
+            if not result.success:
+
+                print(
+                    "Search viewpoint "
+                    "could not be reached."
+                )
+
+                continue
+
+            # ==========================================
+            # TEST-ONLY simulated reacquisition
+            # ==========================================
+
+            if (
+                self.search_reveal_after
+                is not None
+                and viewpoint_number
+                >= self.search_reveal_after
+            ):
+
+                self.visibility_override = (
+                    True
+                )
+
+            # ==========================================
+            # Check visibility
+            # ==========================================
+
+            visible = (
+                self.is_target_visible(
+                    target_name
+                )
+            )
+
+            print(
+                "Target visible:",
+                visible,
+            )
+
+            if visible:
+
+                try:
+
+                    target_position = (
+                        self.get_object_position(
+                            target_name
+                        )
+                    )
+
+                except Exception as error:
+
+                    return ActionResult(
+                        success=False,
+                        skill="SEARCH",
+                        message=(
+                            "Target appeared "
+                            "visible but its "
+                            "position could not "
+                            f"be obtained: {error}"
+                        ),
+                    )
+
+                print(
+                    "\nTARGET FOUND"
+                )
+
+                print(
+                    "Updated target position:",
+                    target_position,
+                )
+
+                self.current_object = (
+                    target_name
+                )
+
+                self.last_action_success = (
+                    True
+                )
+
+                return ActionResult(
+                    success=True,
+                    skill="SEARCH",
+                    message=(
+                        f"{target_name} found "
+                        f"after "
+                        f"{viewpoint_number} "
+                        f"search viewpoint(s)"
+                    ),
+                )
+
+        # ----------------------------------------------
+        # Search exhausted
+        # ----------------------------------------------
+
+        self.last_action_success = False
+
+        self.last_failure_reason = (
+            f"{target_name} not found "
+            f"after {max_search_poses} "
+            f"search viewpoints"
+        )
+
+        print(
+            "\nSEARCH FAILED"
+        )
+
+        print(
+            self.last_failure_reason
+        )
+
+        return ActionResult(
+            success=False,
+            skill="SEARCH",
+            message=(
+                self.last_failure_reason
+            ),
+        )
+
+    # ======================================================
+    # APPROACH WITH SEARCH RECOVERY
+    # ======================================================
+
+    def approach_with_search(
+        self,
+        target_name,
+    ):
+        """
+        Attempt to approach a target.
+
+        If the target is not initially visible, perform
+        SEARCH first. Continue with APPROACH only after
+        the target has been reacquired.
+        """
+
+        print(
+            "\n========================================"
+        )
+
+        print(
+            f"APPROACH WITH SEARCH: "
+            f"{target_name}"
+        )
+
+        print(
+            "========================================"
+        )
+
+        visible = (
+            self.is_target_visible(
+                target_name
+            )
+        )
+
+        print(
+            "Initially visible:",
+            visible,
+        )
+
+        # ----------------------------------------------
+        # Search recovery
+        # ----------------------------------------------
+
+        if not visible:
+
+            print(
+                "\nTarget is not initially "
+                "visible."
+            )
+
+            print(
+                "Starting search recovery..."
+            )
+
+            search_result = (
+                self.search(
+                    target_name
+                )
+            )
+
+            if not search_result.success:
+
+                return self.safe_stop(
+                    (
+                        "Search recovery failed: "
+                        f"{search_result.message}"
+                    )
+                )
+
+            print(
+                "\nSearch recovery successful."
+            )
+
+            print(
+                "Reacquiring target state "
+                "before approach..."
+            )
+
+            try:
+
+                updated_position = (
+                    self.get_object_position(
+                        target_name
+                    )
+                )
+
+            except Exception as error:
+
+                return self.safe_stop(
+                    (
+                        "Target was found but "
+                        "its updated state could "
+                        f"not be read: {error}"
+                    )
+                )
+
+            print(
+                "Updated target position:",
+                updated_position,
+            )
+
+        # ----------------------------------------------
+        # Continue normal approach
+        # ----------------------------------------------
+
+        return self.approach(
+            target_name
         )
