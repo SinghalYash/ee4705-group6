@@ -1,0 +1,138 @@
+trial,image,target,response
+1,trial_001.png,blue cube,"```json
+{
+    ""status"": ""not_found"",
+    ""target"": ""blue cube""
+}
+```"
+2,trial_002.png,grey stone,"```json
+{
+    ""status"": ""success"",
+    ""target"": ""grey stone"",
+    ""bbox"": [334, 265, 374, 305]
+}
+```"
+3,trial_003.png,green cylinder,"```json
+{
+    ""status"": ""success"",
+    ""target"": ""green cylinder"",
+    ""bbox"": [329, 271, 364, 315]
+}
+```"
+4,trial_004.png,blue cube,"```json
+{
+    ""status"": ""success"",
+    ""target"": ""blue cube"",
+    ""bbox"": [316, 259, 384, 307]
+}
+```"
+5,trial_005.png,grey stone,"```json
+{
+    ""status"": ""not_found"",
+    ""target"": ""grey stone""
+}
+```"
+6,trial_006.png,green cylinder,"```json
+{
+    ""status"": ""success"",
+    ""target"": ""green cylinder"",
+    ""bbox"": [285, 190, 314, 236]
+}
+```"
+7,trial_007.png,blue cube,"```json
+{
+    ""status"": ""success"",
+    ""target"": ""blue cube"",
+    ""bbox"": [265, 249, 337, 318]
+}
+```"
+8,trial_008.png,grey stone,"```json
+{
+    ""status"": ""success"",
+    ""target"": ""grey stone"",
+    ""bbox"": [348, 247, 390, 291]
+}
+```"
+9,trial_009.png,green cylinder,"```json
+{
+    ""status"": ""success"",
+    ""target"": ""green cylinder"",
+    ""bbox"": [268, 275, 304, 329]
+}
+```"
+10,trial_010.png,blue cube,"```json
+{
+    ""status"": ""success"",
+    ""target"": ""blue cube"",
+    ""bbox"": [253, 260, 314, 317]
+}
+```"
+11,trial_011.png,grey stone,"```json
+{
+    ""status"": ""success"",
+    ""target"": ""grey stone"",
+    ""bbox"": [248, 293, 310, 345]
+}
+```"
+12,trial_012.png,green cylinder,"```json
+{
+    ""status"": ""success"",
+    ""target"": ""green cylinder"",
+    ""bbox"": [289, 176, 374, 215]
+}
+```"
+13,trial_013.png,blue cube,"```json
+{
+    ""status"": ""success"",
+    ""target"": ""blue cube"",
+    ""bbox"": [340, 218, 385, 326]
+}
+```"
+14,trial_014.png,grey stone,"```json
+{
+    ""status"": ""success"",
+    ""target"": ""grey stone"",
+    ""bbox"": [342, 215, 396, 267]
+}
+```"
+15,trial_015.png,green cylinder,"```json
+{
+    ""status"": ""not_found"",
+    ""target"": ""green cylinder""
+}
+```"
+16,trial_016.png,blue cube,"```json
+{
+    ""status"": ""success"",
+    ""target"": ""blue cube"",
+    ""bbox"": [316, 294, 387, 340]
+}
+```"
+17,trial_017.png,grey stone,"```json
+{
+    ""status"": ""success"",
+    ""target"": ""grey stone"",
+    ""bbox"": [314, 287, 350, 323]
+}
+```"
+18,trial_018.png,green cylinder,"```json
+{
+    ""status"": ""success"",
+    ""target"": ""green cylinder"",
+    ""bbox"": [284, 197, 350, 262]
+}
+```"
+19,trial_019.png,blue cube,"```json
+{
+    ""status"": ""success"",
+    ""target"": ""blue cube"",
+    ""bbox"": [312, 264, 350, 327]
+}
+```"
+20,trial_020.png,grey stone,"```json
+{
+    ""status"": ""success"",
+    ""target"": ""grey stone"",
+    ""bbox"": [304, 245, 364, 301]
+}
+```"
