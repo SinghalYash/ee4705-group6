@@ -44,7 +44,7 @@ for path in [
 # ==========================================================
 
 # Task 2
-from qwen3_local import load_model
+from qwen_backend import load_model
 from perception import ground_object
 
 # Task 3

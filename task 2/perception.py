@@ -6,9 +6,9 @@ from perception_interface import (
     PerceptionResult,
 )
 
-from qwen3_local import (
+from qwen_backend import (
     ask_qwen,
-    qwen3_bbox_to_pixels,
+    bbox_to_pixels,
 )
 
 
@@ -156,7 +156,7 @@ If the target is not visible, return:
 
         # Convert Qwen3's normalized coordinates
         # into actual image pixels.
-        pixel_bbox = qwen3_bbox_to_pixels(
+        pixel_bbox = bbox_to_pixels(
             qwen_bbox,
             image.width,
             image.height,
