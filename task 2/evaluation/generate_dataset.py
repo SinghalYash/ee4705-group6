@@ -1,7 +1,9 @@
 from pathlib import Path
 import random
 import csv
+
 import mujoco
+import numpy as np
 from PIL import Image
 
 
@@ -9,13 +11,6 @@ from PIL import Image
 # PATHS
 # ==========================================================
 
-# generate_dataset.py
-#       ↓ parent
-# evaluation/
-#       ↓ parent
-# task 2/
-#       ↓ parent
-# project root/
 PROJECT_ROOT = (
     Path(__file__).resolve().parent.parent.parent
 )
@@ -32,7 +27,7 @@ GROUND_TRUTH_PATH = (
     / "ground_truth.csv"
 )
 
-# Create images folder if it does not exist.
+# Create image directory if it does not exist.
 IMAGE_DIR.mkdir(
     parents=True,
     exist_ok=True,
@@ -45,24 +40,43 @@ IMAGE_DIR.mkdir(
 
 NUM_TRIALS = 20
 
+# Fixed random seed so that the same dataset can be
+# reproduced every time the script is run.
+RANDOM_SEED = 4705
+
+
+# Bodies that will be randomized.
 OBJECTS = [
     "stone",
     "box_obj",
     "cylinder_obj",
 ]
 
+
+# Map each body to the geometry that appears in
+# MuJoCo's segmentation rendering.
+OBJECT_GEOMS = {
+    "stone": "stone_geom",
+    "box_obj": "box_geom",
+    "cylinder_obj": "cylinder_geom",
+}
+
+
 # Randomized workspace.
 X_RANGE = (0.22, 0.38)
 Y_RANGE = (-0.20, 0.15)
 
+
 # Minimum XY distance between object centres.
 MIN_OBJECT_DISTANCE = 0.08
+
 
 # ==========================================================
 # CAMERA VIEWS
 # ==========================================================
 
 CAMERA_VIEWS = {
+
     "standard": {
         "azimuth": 90,
         "elevation": -75,
@@ -94,6 +108,7 @@ CAMERA_VIEWS = {
     },
 }
 
+
 # ==========================================================
 # MUJOCO HELPER
 # ==========================================================
@@ -106,7 +121,8 @@ def get_freejoint_qpos_address(
     Find where a free object's position begins
     inside MuJoCo's qpos array.
 
-    Free-joint qpos:
+    A free joint stores:
+
     [x, y, z, qw, qx, qy, qz]
     """
 
@@ -126,6 +142,75 @@ def get_freejoint_qpos_address(
 
 
 # ==========================================================
+# TRUE BOUNDING BOX FROM SEGMENTATION
+# ==========================================================
+
+def get_true_bbox(
+    model,
+    segmentation,
+    geom_name,
+):
+    """
+    Calculate the exact visible 2D bounding box of a
+    MuJoCo geometry using the segmentation image.
+
+    Returns:
+
+        [x_min, y_min, x_max, y_max]
+
+    If the object is not visible, returns None.
+    """
+
+    # Get MuJoCo geometry ID.
+    geom_id = mujoco.mj_name2id(
+        model,
+        mujoco.mjtObj.mjOBJ_GEOM,
+        geom_name,
+    )
+
+    # MuJoCo segmentation output:
+    #
+    # channel 0 -> object ID
+    # channel 1 -> object type
+
+    object_ids = segmentation[:, :, 0]
+
+    object_types = segmentation[:, :, 1]
+
+
+    # Select only pixels belonging to this geometry.
+    mask = (
+        (object_ids == geom_id)
+        &
+        (
+            object_types
+            == mujoco.mjtObj.mjOBJ_GEOM
+        )
+    )
+
+
+    # Get coordinates of all matching pixels.
+    y_pixels, x_pixels = np.where(
+        mask
+    )
+
+
+    # No matching pixels means the object is not visible.
+    if len(x_pixels) == 0:
+
+        return None
+
+
+    # Calculate visible bounding box.
+    return [
+        int(x_pixels.min()),
+        int(y_pixels.min()),
+        int(x_pixels.max()),
+        int(y_pixels.max()),
+    ]
+
+
+# ==========================================================
 # RANDOM POSITION GENERATOR
 # ==========================================================
 
@@ -135,12 +220,13 @@ def generate_valid_position(
     """
     Generate a random XY position.
 
-    The position is accepted only if it is at least
-    MIN_OBJECT_DISTANCE away from all previously
-    positioned objects.
+    A position is accepted only if it is at least
+    MIN_OBJECT_DISTANCE away from all objects that
+    have already been positioned.
     """
 
     max_attempts = 100
+
 
     for _ in range(max_attempts):
 
@@ -154,7 +240,9 @@ def generate_valid_position(
             Y_RANGE[1],
         )
 
+
         valid = True
+
 
         for other_x, other_y in existing_positions:
 
@@ -163,12 +251,18 @@ def generate_valid_position(
                 + (y - other_y) ** 2
             ) ** 0.5
 
+
             if distance < MIN_OBJECT_DISTANCE:
+
                 valid = False
+
                 break
 
+
         if valid:
+
             return x, y
+
 
     raise RuntimeError(
         "Could not generate a valid object position."
@@ -181,17 +275,33 @@ def generate_valid_position(
 
 def main():
 
-    print("Generating Task 2 evaluation dataset...")
+    # Make dataset generation reproducible.
+    random.seed(
+        RANDOM_SEED
+    )
+
+
+    print(
+        "Generating Task 2 evaluation dataset..."
+    )
+
 
     # ------------------------------------------------------
-    # LOAD MUJOCO
+    # LOAD MUJOCO MODEL
     # ------------------------------------------------------
 
     model = mujoco.MjModel.from_xml_path(
         str(MODEL_PATH)
     )
 
-    data = mujoco.MjData(model)
+    data = mujoco.MjData(
+        model
+    )
+
+
+    # ------------------------------------------------------
+    # CREATE RENDERER
+    # ------------------------------------------------------
 
     renderer = mujoco.Renderer(
         model,
@@ -199,21 +309,42 @@ def main():
         width=640,
     )
 
+
+    # ------------------------------------------------------
+    # CREATE FREE CAMERA
+    # ------------------------------------------------------
+
     camera = mujoco.MjvCamera()
 
     camera.type = (
         mujoco.mjtCamera.mjCAMERA_FREE
     )
 
-    # Aim approximately at the manipulation workspace.
+
+    # Aim at the manipulation workspace.
     camera.lookat[:] = [
         0.30,
         0.00,
         0.05,
     ]
 
+
     # ------------------------------------------------------
-    # CREATE CSV
+    # CAMERA VIEW SETUP
+    # ------------------------------------------------------
+
+    view_names = list(
+        CAMERA_VIEWS.keys()
+    )
+
+    trials_per_view = (
+        NUM_TRIALS
+        // len(view_names)
+    )
+
+
+    # ------------------------------------------------------
+    # CREATE GROUND-TRUTH CSV
     # ------------------------------------------------------
 
     with open(
@@ -222,9 +353,15 @@ def main():
         newline="",
     ) as csv_file:
 
-        writer = csv.writer(csv_file)
+        writer = csv.writer(
+            csv_file
+        )
 
-        # CSV column names
+
+        # --------------------------------------------------
+        # CSV HEADER
+        # --------------------------------------------------
+
         writer.writerow([
             "trial",
             "image",
@@ -236,7 +373,12 @@ def main():
             "x",
             "y",
             "z",
+            "bbox_xmin",
+            "bbox_ymin",
+            "bbox_xmax",
+            "bbox_ymax",
         ])
+
 
         # --------------------------------------------------
         # GENERATE TRIALS
@@ -247,29 +389,33 @@ def main():
             NUM_TRIALS + 1,
         ):
 
-            # ----------------------------------------------
+
+            # ==============================================
             # SELECT CAMERA VIEW
-            # ----------------------------------------------
-
-            view_names = list(
-                CAMERA_VIEWS.keys()
-            )
-
-            trials_per_view = (
-                NUM_TRIALS // len(view_names)
-            )
+            # ==============================================
 
             view_index = (
-                (trial - 1) // trials_per_view
+                (trial - 1)
+                // trials_per_view
             )
+
+
+            # Safety in case NUM_TRIALS is changed later.
+            view_index = min(
+                view_index,
+                len(view_names) - 1,
+            )
+
 
             view_name = view_names[
                 view_index
             ]
 
+
             view = CAMERA_VIEWS[
                 view_name
             ]
+
 
             camera.azimuth = view[
                 "azimuth"
@@ -283,19 +429,23 @@ def main():
                 "distance"
             ]
 
-            # Reset simulation to scene.xml defaults.
+
+            # ==============================================
+            # RESET SIMULATION
+            # ==============================================
+
             mujoco.mj_resetData(
                 model,
                 data,
             )
 
+
+            # ==============================================
+            # RANDOMIZE OBJECT POSITIONS
+            # ==============================================
+
             placed_positions = []
 
-            trial_positions = {}
-
-            # ----------------------------------------------
-            # RANDOMIZE OBJECTS
-            # ----------------------------------------------
 
             for body_name in OBJECTS:
 
@@ -306,33 +456,51 @@ def main():
                     )
                 )
 
+
                 new_x, new_y = (
                     generate_valid_position(
                         placed_positions
                     )
                 )
 
+
+                # Change X position.
                 data.qpos[
                     qpos_address
                 ] = new_x
 
+
+                # Change Y position.
                 data.qpos[
                     qpos_address + 1
                 ] = new_y
 
+
+                # Z is left unchanged.
                 placed_positions.append(
-                    (new_x, new_y)
+                    (
+                        new_x,
+                        new_y,
+                    )
                 )
 
-            # Update MuJoCo state.
+
+            # ==============================================
+            # UPDATE MUJOCO STATE
+            # ==============================================
+
             mujoco.mj_forward(
                 model,
                 data,
             )
 
-            # ----------------------------------------------
-            # GET TRUE OBJECT POSITIONS
-            # ----------------------------------------------
+
+            # ==============================================
+            # RECORD TRUE WORLD POSITIONS
+            # ==============================================
+
+            trial_positions = {}
+
 
             for body_name in OBJECTS:
 
@@ -342,41 +510,69 @@ def main():
                     body_name,
                 )
 
+
                 position = (
                     data.xpos[
                         body_id
                     ].copy()
                 )
 
+
                 trial_positions[
                     body_name
                 ] = position
 
-            # ----------------------------------------------
-            # RENDER CAMERA
-            # ----------------------------------------------
+
+            # ==============================================
+            # RENDER RGB IMAGE
+            # ==============================================
 
             renderer.update_scene(
                 data,
                 camera=camera,
             )
 
+
             rgb_image = (
                 renderer.render()
             )
 
-            # ----------------------------------------------
-            # SAVE IMAGE
-            # ----------------------------------------------
+
+            # ==============================================
+            # RENDER SEGMENTATION
+            # ==============================================
+
+            renderer.enable_segmentation_rendering()
+
+
+            renderer.update_scene(
+                data,
+                camera=camera,
+            )
+
+
+            segmentation = (
+                renderer.render()
+            )
+
+
+            renderer.disable_segmentation_rendering()
+
+
+            # ==============================================
+            # SAVE RGB IMAGE
+            # ==============================================
 
             image_name = (
                 f"trial_{trial:03d}.png"
             )
 
+
             image_path = (
                 IMAGE_DIR
                 / image_name
             )
+
 
             Image.fromarray(
                 rgb_image
@@ -384,14 +580,60 @@ def main():
                 image_path
             )
 
-            # ----------------------------------------------
-            # SAVE GROUND TRUTH
-            # ----------------------------------------------
+
+            # ==============================================
+            # SAVE GROUND TRUTH FOR EACH OBJECT
+            # ==============================================
 
             for (
                 body_name,
                 position,
             ) in trial_positions.items():
+
+
+                # ------------------------------------------
+                # GET GEOMETRY NAME
+                # ------------------------------------------
+
+                geom_name = OBJECT_GEOMS[
+                    body_name
+                ]
+
+
+                # ------------------------------------------
+                # GET TRUE IMAGE BOUNDING BOX
+                # ------------------------------------------
+
+                true_bbox = get_true_bbox(
+                    model,
+                    segmentation,
+                    geom_name,
+                )
+
+
+                # ------------------------------------------
+                # HANDLE INVISIBLE OBJECT
+                # ------------------------------------------
+
+                if true_bbox is None:
+
+                    bbox_values = [
+                        "",
+                        "",
+                        "",
+                        "",
+                    ]
+
+                else:
+
+                    bbox_values = (
+                        true_bbox
+                    )
+
+
+                # ------------------------------------------
+                # WRITE CSV ROW
+                # ------------------------------------------
 
                 writer.writerow([
                     trial,
@@ -404,14 +646,27 @@ def main():
                     position[0],
                     position[1],
                     position[2],
+                    *bbox_values,
                 ])
+
 
             print(
                 f"Generated trial "
-                f"{trial:03d}/{NUM_TRIALS}"
+                f"{trial:03d}/{NUM_TRIALS} "
+                f"({view_name})"
             )
 
+
+    # ------------------------------------------------------
+    # CLEAN UP
+    # ------------------------------------------------------
+
     renderer.close()
+
+
+    # ------------------------------------------------------
+    # COMPLETE
+    # ------------------------------------------------------
 
     print(
         "\nDataset generation complete."
@@ -426,6 +681,8 @@ def main():
         "Ground truth:",
         GROUND_TRUTH_PATH,
     )
+
+
 # ==========================================================
 # RUN PROGRAM
 # ==========================================================

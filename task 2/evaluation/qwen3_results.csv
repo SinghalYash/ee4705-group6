@@ -1,0 +1,99 @@
+trial,image,target,status,bbox,raw_response
+1,trial_001.png,blue cube,success,"[315, 232, 351, 267]","{
+    ""status"": ""success"",
+    ""target"": ""blue cube"",
+    ""bbox"": [492, 484, 548, 556]
+}"
+2,trial_002.png,grey stone,success,"[309, 168, 336, 185]","{
+    ""status"": ""success"",
+    ""target"": ""grey stone"",
+    ""bbox"": [483, 350, 525, 385]
+}"
+3,trial_003.png,green cylinder,success,"[293, 272, 330, 311]","{
+    ""status"": ""success"",
+    ""target"": ""green cylinder"",
+    ""bbox"": [458, 566, 516, 647]
+}"
+4,trial_004.png,blue cube,success,"[276, 205, 310, 242]","{
+    ""status"": ""success"",
+    ""target"": ""blue cube"",
+    ""bbox"": [432, 427, 485, 504]
+}"
+5,trial_005.png,grey stone,success,"[323, 255, 362, 296]","{
+    ""status"": ""success"",
+    ""target"": ""grey stone"",
+    ""bbox"": [505, 531, 565, 617]
+}"
+6,trial_006.png,green cylinder,success,"[250, 189, 284, 218]","{
+    ""status"": ""success"",
+    ""target"": ""green cylinder"",
+    ""bbox"": [390, 394, 443, 455]
+}"
+7,trial_007.png,blue cube,success,"[310, 232, 353, 274]","{
+    ""status"": ""success"",
+    ""target"": ""blue cube"",
+    ""bbox"": [484, 484, 552, 570]
+}"
+8,trial_008.png,grey stone,success,"[349, 260, 394, 297]","{
+    ""status"": ""success"",
+    ""target"": ""grey stone"",
+    ""bbox"": [545, 542, 616, 618]
+}"
+9,trial_009.png,green cylinder,success,"[283, 276, 320, 315]","{
+    ""status"": ""success"",
+    ""target"": ""green cylinder"",
+    ""bbox"": [442, 575, 500, 657]
+}"
+10,trial_010.png,blue cube,success,"[276, 254, 323, 290]","{
+    ""status"": ""success"",
+    ""target"": ""blue cube"",
+    ""bbox"": [432, 530, 504, 604]
+}"
+11,trial_011.png,grey stone,not_found,,"{
+    ""status"": ""not_found"",
+    ""target"": ""grey stone""
+}"
+12,trial_012.png,green cylinder,success,"[285, 176, 322, 240]","{
+    ""status"": ""success"",
+    ""target"": ""green cylinder"",
+    ""bbox"": [446, 366, 503, 500]
+}"
+13,trial_013.png,blue cube,not_found,,"{
+    ""status"": ""not_found"",
+    ""target"": ""blue cube""
+}"
+14,trial_014.png,grey stone,success,"[333, 311, 390, 360]","{
+    ""status"": ""success"",
+    ""target"": ""grey stone"",
+    ""bbox"": [521, 648, 609, 750]
+}"
+15,trial_015.png,green cylinder,success,"[330, 183, 365, 226]","{
+    ""status"": ""success"",
+    ""target"": ""green cylinder"",
+    ""bbox"": [515, 382, 570, 470]
+}"
+16,trial_016.png,blue cube,success,"[251, 229, 292, 266]","{
+    ""status"": ""success"",
+    ""target"": ""blue cube"",
+    ""bbox"": [392, 477, 456, 554]
+}"
+17,trial_017.png,grey stone,success,"[291, 280, 324, 313]","{
+    ""status"": ""success"",
+    ""target"": ""grey stone"",
+    ""bbox"": [454, 584, 506, 652]
+}"
+18,trial_018.png,green cylinder,success,"[312, 282, 341, 311]","{
+    ""status"": ""success"",
+    ""target"": ""green cylinder"",
+    ""bbox"": [487, 588, 533, 647]
+}"
+19,trial_019.png,blue cube,success,"[318, 225, 349, 248]","{
+    ""status"": ""success"",
+    ""target"": ""blue cube"",
+    ""bbox"": [497, 468, 546, 516]
+}"
+20,trial_020.png,grey stone,success,"[331, 256, 362, 289]","{
+    ""status"": ""success"",
+    ""target"": ""grey stone"",
+    ""bbox"": [517, 534, 566, 602]
+}"

@@ -1,29 +1,28 @@
 trial,image,target,response
 1,trial_001.png,blue cube,"```json
 {
-    ""status"": ""not_found"",
-    ""target"": ""blue cube""
+    ""status"": ""success"",
+    ""target"": ""blue cube"",
+    ""bbox"": [304, 201, 360, 259]
 }
 ```"
 2,trial_002.png,grey stone,"```json
 {
-    ""status"": ""success"",
-    ""target"": ""grey stone"",
-    ""bbox"": [334, 265, 374, 305]
+    ""status"": ""not_found"",
+    ""target"": ""grey stone""
 }
 ```"
 3,trial_003.png,green cylinder,"```json
 {
-    ""status"": ""success"",
-    ""target"": ""green cylinder"",
-    ""bbox"": [329, 271, 364, 315]
+    ""status"": ""not_found"",
+    ""target"": ""green cylinder""
 }
 ```"
 4,trial_004.png,blue cube,"```json
 {
-    ""status"": ""success"",
+    ""status"": ""found"",
     ""target"": ""blue cube"",
-    ""bbox"": [316, 259, 384, 307]
+    ""bbox"": [250, 173, 314, 236]
 }
 ```"
 5,trial_005.png,grey stone,"```json
@@ -34,105 +33,103 @@ trial,image,target,response
 ```"
 6,trial_006.png,green cylinder,"```json
 {
-    ""status"": ""success"",
-    ""target"": ""green cylinder"",
-    ""bbox"": [285, 190, 314, 236]
+    ""status"": ""not_found"",
+    ""target"": ""green cylinder""
 }
 ```"
 7,trial_007.png,blue cube,"```json
 {
     ""status"": ""success"",
     ""target"": ""blue cube"",
-    ""bbox"": [265, 249, 337, 318]
+    ""bbox"": [238, 167, 390, 295]
 }
 ```"
 8,trial_008.png,grey stone,"```json
 {
     ""status"": ""success"",
     ""target"": ""grey stone"",
-    ""bbox"": [348, 247, 390, 291]
+    ""bbox"": [356, 260, 401, 307]
 }
 ```"
 9,trial_009.png,green cylinder,"```json
 {
     ""status"": ""success"",
     ""target"": ""green cylinder"",
-    ""bbox"": [268, 275, 304, 329]
+    ""bbox"": [284, 273, 325, 326]
 }
 ```"
 10,trial_010.png,blue cube,"```json
 {
     ""status"": ""success"",
     ""target"": ""blue cube"",
-    ""bbox"": [253, 260, 314, 317]
+    ""bbox"": [283, 250, 349, 317]
 }
 ```"
 11,trial_011.png,grey stone,"```json
 {
-    ""status"": ""success"",
-    ""target"": ""grey stone"",
-    ""bbox"": [248, 293, 310, 345]
+    ""status"": ""not_found"",
+    ""target"": ""grey stone""
 }
 ```"
 12,trial_012.png,green cylinder,"```json
 {
     ""status"": ""success"",
     ""target"": ""green cylinder"",
-    ""bbox"": [289, 176, 374, 215]
+    ""bbox"": [267, 183, 325, 240]
 }
 ```"
 13,trial_013.png,blue cube,"```json
 {
-    ""status"": ""success"",
-    ""target"": ""blue cube"",
-    ""bbox"": [340, 218, 385, 326]
+    ""status"": ""not_found"",
+    ""target"": ""blue cube""
 }
 ```"
 14,trial_014.png,grey stone,"```json
 {
     ""status"": ""success"",
     ""target"": ""grey stone"",
-    ""bbox"": [342, 215, 396, 267]
+    ""bbox"": [308, 271, 365, 324]
 }
 ```"
 15,trial_015.png,green cylinder,"```json
 {
-    ""status"": ""not_found"",
-    ""target"": ""green cylinder""
+    ""status"": ""success"",
+    ""target"": ""green cylinder"",
+    ""bbox"": [329, 178, 384, 220]
 }
 ```"
 16,trial_016.png,blue cube,"```json
 {
     ""status"": ""success"",
     ""target"": ""blue cube"",
-    ""bbox"": [316, 294, 387, 340]
+    ""bbox"": [253, 228, 316, 270]
 }
 ```"
 17,trial_017.png,grey stone,"```json
 {
     ""status"": ""success"",
     ""target"": ""grey stone"",
-    ""bbox"": [314, 287, 350, 323]
+    ""bbox"": [304, 276, 358, 312]
 }
 ```"
 18,trial_018.png,green cylinder,"```json
 {
     ""status"": ""success"",
     ""target"": ""green cylinder"",
-    ""bbox"": [284, 197, 350, 262]
+    ""bbox"": [308, 267, 341, 309]
 }
 ```"
 19,trial_019.png,blue cube,"```json
 {
     ""status"": ""success"",
     ""target"": ""blue cube"",
-    ""bbox"": [312, 264, 350, 327]
+    ""bbox"": [329, 218, 356, 247]
 }
 ```"
 20,trial_020.png,grey stone,"```json
 {
     ""status"": ""success"",
     ""target"": ""grey stone"",
-    ""bbox"": [304, 245, 364, 301]
+    ""bbox"": [304, 251, 362, 317]
 }
 ```"
