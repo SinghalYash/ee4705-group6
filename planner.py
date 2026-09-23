@@ -20,13 +20,17 @@ from openai import OpenAI
 # MODEL = "gpt-5-mini"
 
 # --- Qwen (Alibaba Cloud, Singapore region, free quota) ---
-client = OpenAI(api_key=os.environ["DASHSCOPE_API_KEY"],
-                 base_url="https://dashscope-intl.aliyuncs.com/compatible-mode/v1")
-MODEL = "qwen3-vl-flash"
+#client = OpenAI(api_key=os.environ["DASHSCOPE_API_KEY"],
+#                 base_url="https://dashscope-intl.aliyuncs.com/compatible-mode/v1")
+#MODEL = "qwen3-vl-flash"
 
 # --- Local Ollama (free, offline, no API key needed) ---
-# client = OpenAI(api_key="ollama", base_url="http://localhost:11434/v1")
-# MODEL = "qwen2.5vl:3b"
+client = OpenAI(
+    api_key="ollama",
+    base_url="http://localhost:11434/v1",
+)
+
+MODEL = "qwen3:4b"
 
 
 ALLOWED_SKILLS = ["SEARCH", "APPROACH", "REACH", "GRASP", "MOVE_TO", "PLACE", "VERIFY", "STOP"]

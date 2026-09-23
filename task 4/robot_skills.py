@@ -212,6 +212,22 @@ class RobotSkills:
         )
 
         # --------------------------------------------------
+        # TASK 2 PERCEPTION CALLBACK
+        # --------------------------------------------------
+
+        # Task 5 can replace this with a function that uses
+        # Task 2 visual perception.
+        #
+        # Expected form:
+        #
+        #     callback(target_name) -> bool
+        #
+        # If None, Task 4 keeps using its existing
+        # simulator-state visibility fallback.
+
+        self.perception_callback = None
+
+        # --------------------------------------------------
         # Grasp site
         # --------------------------------------------------
 
@@ -545,6 +561,18 @@ class RobotSkills:
 
             return bool(
                 self.visibility_override
+            )
+
+        # ----------------------------------------------
+        # Task 2 perception
+        # ----------------------------------------------
+
+        if self.perception_callback is not None:
+
+            return bool(
+                self.perception_callback(
+                    target_name
+                )
             )
 
         # ----------------------------------------------

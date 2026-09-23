@@ -1,21 +1,32 @@
+import sys
 from pathlib import Path
+
 from PIL import Image
+
+# ==========================================================
+# ALLOW IMPORTS FROM TASK 2
+# ==========================================================
+
+
+TASK2_DIR = (
+    Path(__file__).resolve().parent.parent
+)
+
+if str(TASK2_DIR) not in sys.path:
+    sys.path.insert(
+        0,
+        str(TASK2_DIR),
+    )
 
 from qwen3_local import load_model
 from perception import ground_object
 
-
 # ==========================================================
-# PATH
+# IMAGE PATH
 # ==========================================================
-
-PROJECT_ROOT = (
-    Path(__file__).resolve().parent.parent
-)
 
 IMAGE_PATH = (
-    PROJECT_ROOT
-    / "task 2"
+    TASK2_DIR
     / "evaluation"
     / "images"
     / "trial_001.png"
