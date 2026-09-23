@@ -6,7 +6,10 @@ from perception_interface import (
     PerceptionResult,
 )
 
-from qwen_local import ask_qwen
+from qwen3_local import (
+    ask_qwen,
+    qwen3_bbox_to_pixels,
+)
 
 
 def clean_json_response(response: str) -> str:
@@ -20,19 +23,52 @@ def clean_json_response(response: str) -> str:
         response,
     ).strip()
 
+
 def ground_object(
     model,
     processor,
     image,
     target: str,
 ) -> PerceptionResult:
+    """
+    Locate a requested object in an image using Qwen3-VL.
 
-    # Build prompt
-    query = f"""
-    ...
+    Always returns a PerceptionResult.
     """
 
-    # Ask Qwen
+    # ------------------------------------------------------
+    # BUILD GROUNDING PROMPT
+    # ------------------------------------------------------
+
+    query = f"""
+Locate the {target} in this image.
+
+Return the bounding box using normalized coordinates
+from 0 to 1000 in this order:
+
+[x_min, y_min, x_max, y_max]
+
+Return JSON only:
+
+{{
+    "status": "success",
+    "target": "{target}",
+    "bbox": [x_min, y_min, x_max, y_max]
+}}
+
+If the target is not visible, return:
+
+{{
+    "status": "not_found",
+    "target": "{target}"
+}}
+"""
+
+
+    # ------------------------------------------------------
+    # ASK QWEN3
+    # ------------------------------------------------------
+
     response = ask_qwen(
         model,
         processor,
@@ -40,12 +76,22 @@ def ground_object(
         query,
     )
 
+
+    # ------------------------------------------------------
+    # CLEAN RESPONSE
+    # ------------------------------------------------------
+
     clean_response = clean_json_response(
         response
     )
 
-    # Parse JSON
+
+    # ------------------------------------------------------
+    # PARSE JSON
+    # ------------------------------------------------------
+
     try:
+
         result = json.loads(
             clean_response
         )
@@ -61,7 +107,11 @@ def ground_object(
             reason=clean_response,
         )
 
-    # Target not found
+
+    # ------------------------------------------------------
+    # TARGET NOT FOUND
+    # ------------------------------------------------------
+
     if result.get("status") == "not_found":
 
         return PerceptionResult(
@@ -70,40 +120,73 @@ def ground_object(
             answer=f"{target} was not found.",
             objects=[],
             target=None,
-            reason=result.get(
-                "reason",
-                "Target not visible.",
-            ),
+            reason="Target not visible.",
         )
 
-    # Target found
+
+    # ------------------------------------------------------
+    # TARGET FOUND
+    # ------------------------------------------------------
+
     if result.get("status") == "success":
 
+        qwen_bbox = result.get(
+            "bbox"
+        )
+
+
+        # Check that Qwen returned a valid bbox.
+        if (
+            not isinstance(
+                qwen_bbox,
+                list,
+            )
+            or len(qwen_bbox) != 4
+        ):
+
+            return PerceptionResult(
+                status="error",
+                query=target,
+                answer="Qwen returned an invalid bounding box.",
+                objects=[],
+                target=None,
+                reason=str(qwen_bbox),
+            )
+
+
+        # Convert Qwen3's normalized coordinates
+        # into actual image pixels.
+        pixel_bbox = qwen3_bbox_to_pixels(
+            qwen_bbox,
+            image.width,
+            image.height,
+        )
+
+
         detected_target = DetectedObject(
-            label=result.get(
-                "label",
-                target,
-            ),
-            color=result.get(
-                "color"
-            ),
-            bbox=result.get(
-                "bbox",
-                [],
-            ),
+            label=target,
+            color=None,
+            bbox=pixel_bbox,
             confidence=None,
         )
+
 
         return PerceptionResult(
             status="success",
             query=target,
             answer=f"{target} was grounded successfully.",
-            objects=[detected_target],
+            objects=[
+                detected_target
+            ],
             target=detected_target,
             reason=None,
         )
 
-    # Anything unexpected
+
+    # ------------------------------------------------------
+    # UNEXPECTED RESPONSE
+    # ------------------------------------------------------
+
     return PerceptionResult(
         status="error",
         query=target,

@@ -1,34 +1,60 @@
+from pathlib import Path
 from PIL import Image
 
-from qwen_local import load_model
+from qwen3_local import load_model
 from perception import ground_object
 
 
-# Load Qwen
+# ==========================================================
+# PATH
+# ==========================================================
+
+PROJECT_ROOT = (
+    Path(__file__).resolve().parent.parent
+)
+
+IMAGE_PATH = (
+    PROJECT_ROOT
+    / "task 2"
+    / "evaluation"
+    / "images"
+    / "trial_001.png"
+)
+
+
+# ==========================================================
+# LOAD QWEN3
+# ==========================================================
+
 model, processor = load_model()
 
 
-# Load MuJoCo overhead camera image
+# ==========================================================
+# LOAD IMAGE
+# ==========================================================
+
 image = Image.open(
-    "camera_test_overhead.png"
+    IMAGE_PATH
 ).convert("RGB")
 
 
-# Choose what we want the robot to find
-target = "blue cube"
+# ==========================================================
+# RUN TASK 2
+# ==========================================================
 
-
-# Ask Task 2 to ground the target
 result = ground_object(
     model,
     processor,
     image,
-    target,
+    "blue cube",
 )
 
 
-# Display structured result
-print("\n===== PERCEPTION RESULT =====")
+# ==========================================================
+# DISPLAY RESULT
+# ==========================================================
+
+print("\n===== TASK 2 RESULT =====")
 
 print("Status:", result.status)
 print("Query:", result.query)
