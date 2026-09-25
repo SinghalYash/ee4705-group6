@@ -1174,27 +1174,30 @@ class RobotSkills:
             f"\n[TASK 4] APPROACH {target_name}"
         )
 
-        try:
+        # Use position estimated from Task 2 + RGB-D.
+        if (
+            hasattr(self, "perceived_target_position")
+            and hasattr(self, "perceived_target_name")
+            and self.perceived_target_name == target_name
+        ):
 
             object_pos = (
-                self.get_object_position(
-                    target_name
-                )
+                self.perceived_target_position.copy()
             )
 
-        except (
-            ValueError,
-            RuntimeError,
-        ) as error:
+        else:
 
             return ActionResult(
                 success=False,
                 skill="APPROACH",
-                message=str(error),
+                message=(
+                    f"No RGB-D position available "
+                    f"for {target_name}"
+                ),
             )
 
         print(
-            "Current object position:",
+            "RGB-D estimated object position:",
             object_pos,
         )
 
@@ -1225,11 +1228,8 @@ class RobotSkills:
                 error=result.error,
             )
 
-        # Re-read object state.
         object_pos = (
-            self.get_object_position(
-                target_name
-            )
+            self.perceived_target_position.copy()
         )
 
         # ----------------------------------------------
@@ -1259,11 +1259,8 @@ class RobotSkills:
                 error=result.error,
             )
 
-        # Re-read object state again.
         object_pos = (
-            self.get_object_position(
-                target_name
-            )
+            self.perceived_target_position.copy()
         )
 
         # ----------------------------------------------
@@ -1324,27 +1321,29 @@ class RobotSkills:
             f"\n[TASK 4] REACH {target_name}"
         )
 
-        try:
+        if (
+            hasattr(self, "perceived_target_position")
+            and hasattr(self, "perceived_target_name")
+            and self.perceived_target_name == target_name
+        ):
 
             object_pos = (
-                self.get_object_position(
-                    target_name
-                )
+                self.perceived_target_position.copy()
             )
 
-        except (
-            ValueError,
-            RuntimeError,
-        ) as error:
+        else:
 
             return ActionResult(
                 success=False,
                 skill="REACH",
-                message=str(error),
+                message=(
+                    f"No RGB-D position available "
+                    f"for {target_name}"
+                ),
             )
 
         print(
-            "Current object position:",
+            "RGB-D estimated object position:",
             object_pos,
         )
 
@@ -1359,10 +1358,7 @@ class RobotSkills:
         pregrasp_target = np.array([
             object_pos[0],
             object_pos[1],
-            object_pos[2]
-            + object_properties[
-                "pregrasp_offset"
-            ],
+            object_pos[2],
         ])
 
         

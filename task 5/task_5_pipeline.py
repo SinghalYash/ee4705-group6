@@ -205,6 +205,15 @@ def create_perception_callback(
                 camera_name="overhead_cam",
             )
 
+            # Save the RGB-D estimate for Task 4.
+            robot.perceived_target_position = (
+                estimated_position.copy()
+            )
+
+            robot.perceived_target_name = (
+                target_name
+            )
+
 
             # Ground truth ONLY for evaluation.
             true_position = robot.get_object_position(
