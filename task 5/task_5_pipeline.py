@@ -1,7 +1,7 @@
-import numpy as np
 import sys
 from pathlib import Path
 
+import numpy as np
 import mujoco
 from PIL import Image
 
@@ -12,46 +12,38 @@ from camera_grounding import bbox_depth_to_world
 # PROJECT PATHS
 # ==========================================================
 
-PROJECT_ROOT = (
-    Path(__file__).resolve().parent.parent
-)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+TASK4_DIR = PROJECT_ROOT / "task 4"
 
-TASK2_DIR = (
-    PROJECT_ROOT / "task 2"
-)
-
-TASK4_DIR = (
-    PROJECT_ROOT / "task 4"
-)
-
-
-for path in [
-    PROJECT_ROOT,
-    TASK2_DIR,
-    TASK4_DIR,
-]:
-
+for path in [PROJECT_ROOT, TASK4_DIR]:
     if str(path) not in sys.path:
-
-        sys.path.insert(
-            0,
-            str(path),
-        )
+        sys.path.insert(0, str(path))
 
 
 # ==========================================================
 # TASK IMPORTS
 # ==========================================================
 
-# Task 2
-from qwen_backend import load_model
-from perception import ground_object
+# Task 2 and Task 3 are real Python packages (task_2/, task_3/), so
+# they are imported by their package-qualified names. This keeps each
+# module loaded exactly once -- previously this file added task_2's
+# own folder to sys.path and imported "perception" bare, while
+# task_3/scene_builder.py separately imported "task_2.perception"
+# dotted, which silently created two different copies of the same
+# module (and, with it, two different DetectedObject/PerceptionResult
+# classes). Importing everything the same way avoids that.
+from task_2.perception import ground_object
+from task_3.planner import plan_from_instruction
 
-# Task 3
-from planner import plan_from_instruction
+# Task 4 lives in a folder with a space in its name ("task 4"), so it
+# cannot be imported as a normal dotted package -- its folder is put
+# on sys.path above, and its module is imported directly instead.
+from task_4.task_4_executor import Task4Executor
 
-# Task 4
-from task_4_executor import Task4Executor
+# Optional: lets this pipeline accept a *spoken* instruction as well
+# as a typed one.
+from task_3.voice_input import listen_and_transcribe
+
 
 # ==========================================================
 # CAMERA CAPTURE
@@ -131,9 +123,14 @@ VISUAL_TARGET_NAMES = {
 
 def create_perception_callback(
     robot,
-    model,
-    processor,
 ):
+    """
+    Build the callback Task 4 calls (as robot.perception_callback)
+    every time it needs to check whether a named target is currently
+    visible. Task 2's cloud backend (task_2/qwen_backend.py) needs no
+    locally loaded model, so nothing is threaded through here besides
+    the robot handle.
+    """
 
     def detect_target(
         target_name,
@@ -157,10 +154,12 @@ def create_perception_callback(
             camera_name="overhead_cam",
         )
 
-        # Run Task 2.
+        # Run Task 2. (model/processor are unused by the cloud
+        # backend -- ground_object keeps the parameters only so its
+        # signature still matches the older local-model tests.)
         result = ground_object(
-            model,
-            processor,
+            None,
+            None,
             image,
             visual_target,
         )
@@ -196,7 +195,7 @@ def create_perception_callback(
                 centre_y,
                 centre_x,
             ]
-            
+
             estimated_position = bbox_depth_to_world(
                 model=robot.model,
                 data=robot.data,
@@ -215,47 +214,60 @@ def create_perception_callback(
             )
 
 
-            # Ground truth ONLY for evaluation.
-            true_position = robot.get_object_position(
-                target_name
-            )
+            # Ground truth ONLY for evaluation -- this comparison is
+            # purely diagnostic logging, so if target_name isn't a
+            # name the simulator recognises (e.g. Task 4's name
+            # normalisation didn't map it to a known canonical name),
+            # skip the comparison instead of crashing the whole run.
+            # The actual perception result returned below does not
+            # depend on any of this.
+            try:
 
+                true_position = robot.get_object_position(
+                    target_name
+                )
 
-            position_error = np.linalg.norm(
-                estimated_position
-                - true_position
-            )
+                position_error = np.linalg.norm(
+                    estimated_position
+                    - true_position
+                )
 
+                print(
+                    "RGB-D estimated XYZ:",
+                    estimated_position,
+                )
 
-            print(
-                "RGB-D estimated XYZ:",
-                estimated_position,
-            )
+                print(
+                    "True MuJoCo XYZ:",
+                    true_position,
+                )
 
-            print(
-                "True MuJoCo XYZ:",
-                true_position,
-            )
+                print(
+                    "3D localisation error:",
+                    position_error,
+                    "m",
+                )
 
-            print(
-                "3D localisation error:",
-                position_error,
-                "m",
-            )
+                print(
+                    "Bounding-box centre:",
+                    (
+                        centre_x,
+                        centre_y,
+                    ),
+                )
 
-            print(
-                "Bounding-box centre:",
-                (
-                    centre_x,
-                    centre_y,
-                ),
-            )
+                print(
+                    "Depth at target centre:",
+                    depth_value,
+                    "m",
+                )
 
-            print(
-                "Depth at target centre:",
-                depth_value,
-                "m",
-            )
+            except Exception as error:
+
+                print(
+                    "(skipping ground-truth comparison -- "
+                    f"'{target_name}' not recognised: {error})"
+                )
 
         # Task 4 only needs True / False
         # from is_target_visible().
@@ -266,6 +278,38 @@ def create_perception_callback(
 
     return detect_target
 
+
+# ==========================================================
+# INSTRUCTION INPUT (typed or spoken)
+# ==========================================================
+
+def get_instruction():
+    """
+    Ask the user for an instruction, typed or spoken.
+
+    Speech goes through Task 3's listen_and_transcribe(), which now
+    includes a domain-vocabulary correction pass (see
+    task_3/voice_input.py) to fix common misheard words such as
+    "read" -> "red" before the text ever reaches the planner.
+    """
+
+    choice = input(
+        "\nType an instruction, or press ENTER to speak it: "
+    ).strip()
+
+    if choice:
+        return choice
+
+    for attempt in range(3):
+        spoken = listen_and_transcribe()
+        if spoken:
+            return spoken
+        print("Didn't catch that -- let's try again.")
+
+    print("No instruction understood after 3 tries; using the typed fallback.")
+    return input("Type an instruction: ").strip()
+
+
 # ==========================================================
 # MAIN TASK 5 PIPELINE
 # ==========================================================
@@ -273,20 +317,10 @@ def create_perception_callback(
 if __name__ == "__main__":
 
     instruction = (
-        "Move the blue cube to the red area."
+        sys.argv[1]
+        if len(sys.argv) > 1
+        else get_instruction()
     )
-
-
-    # ------------------------------------------------------
-    # TASK 2 MODEL
-    # ------------------------------------------------------
-
-    print(
-        "Loading Task 2 model..."
-    )
-
-    model, processor = load_model()
-
 
     # ------------------------------------------------------
     # TASK 4 EXECUTOR
@@ -306,9 +340,25 @@ if __name__ == "__main__":
     executor.robot.perception_callback = (
         create_perception_callback(
             executor.robot,
-            model,
-            processor,
         )
+    )
+
+
+    # ------------------------------------------------------
+    # TASK 2 SCENE SNAPSHOT FOR TASK 3
+    # ------------------------------------------------------
+    # Capture one live frame now and hand it to the planner, instead
+    # of the planner re-opening a hardcoded local test image. Task 4
+    # will keep re-grounding against fresh frames of its own via the
+    # perception_callback above as it executes each action.
+
+    print(
+        "\nCapturing scene for Task 3 planning..."
+    )
+
+    planning_image, _ = capture_rgbd(
+        executor.robot,
+        camera_name="overhead_cam",
     )
 
 
@@ -321,7 +371,8 @@ if __name__ == "__main__":
     )
 
     plan = plan_from_instruction(
-        instruction
+        instruction,
+        image=planning_image,
     )
 
 
