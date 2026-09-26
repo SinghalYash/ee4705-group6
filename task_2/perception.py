@@ -1,7 +1,9 @@
+
+
 import json
 import re
-from perception_interface import DetectedObject, PerceptionResult
-from qwen_backend import ask_qwen,bbox_to_pixels
+from task_2.perception_interface import DetectedObject, PerceptionResult
+from task_2.qwen_backend import ask_qwen,bbox_to_pixels
 
 def clean_json_response(response: str) -> str:
     """
@@ -27,45 +29,59 @@ def understand_scene(image, query: str) -> PerceptionResult:
     Returns structured scene information.
     """
 
-    prompt = f"""You are the visual perception system of a robot.
+    prompt = f"""
+    You are the visual perception system of a robot.
 
-        Look carefully at the provided camera image and answer
-        the following question:
+    Look carefully at the provided camera image and answer
+    the following question:
 
-        "{query}"
+    "{query}"
 
-        Identify task-relevant objects and target regions that
-        are actually visible in the image.
+    Identify each distinct manipulable object and each designated
+    target region that is actually visible in the image.
 
-        Return JSON only using this exact structure:
+    Return JSON only using exactly this structure:
 
-        {{
-            "status": "success",
-            "answer": "short natural-language answer",
-            "objects": [
-                {{
-                    "label": "object name",
-                    "color": "object color"
-                }}
-            ],
-            "target_regions": [
-                "region name"
-            ]
-        }}
+    {{
+        "status": "success",
+        "answer": "short description of the scene",
+        "objects": [
+            {{
+                "label": "object type",
+                "color": "object color"
+            }}
+        ],
+        "target_regions": [
+            {{
+                "label": "region type",
+                "color": "region color"
+            }}
+        ]
+    }}
 
-        Rules:
+    Important rules:
 
-        - Only report objects that are actually visible.
-        - Do not invent objects.
-        - Use simple object names where possible.
-        - Include the color when it is visually identifiable.
-        - Target regions are designated areas such as a red area,
-        blue area, marker, zone, or platform.
-        - If no relevant objects are visible, return an empty
-        objects list.
-        - If no target regions are visible, return an empty
-        target_regions list.
-        """
+    - Each physical object must appear exactly once in "objects".
+    - Do not list an object's color as a separate object.
+    - For example, a green sphere must be represented as:
+    {{"label": "sphere", "color": "green"}}
+    NOT as separate objects "green" and "sphere".
+
+    - A target region is not an object.
+    - Put designated areas, circles, markers, or zones only in
+    "target_regions".
+
+    - Describe objects using visually identifiable properties.
+    - Do not guess an object's semantic identity from appearance alone.
+    - For example, if something looks like a gray irregular object,
+    describe it visually rather than assuming it is a "stone".
+
+    - Only report items actually visible in the image.
+    - Do not invent objects.
+    - Do not duplicate objects.
+    - If no objects are visible, return an empty objects list.
+    - If no target regions are visible, return an empty target_regions list.
+    """
 
     response = ask_qwen(image, prompt)
     clean_response = clean_json_response(response)
@@ -81,7 +97,7 @@ def understand_scene(image, query: str) -> PerceptionResult:
             answer="Qwen returned invalid JSON.",
             objects=[],
             target=None,
-            # target_regions=[],
+            target_regions=[],
             reason=clean_response,
         )
 
@@ -118,6 +134,10 @@ def understand_scene(image, query: str) -> PerceptionResult:
         ),
         objects=detected_objects,
         target=None,
+        target_regions=result.get(
+            "target_regions",
+            [],
+        ),
         reason=None,
     )
 
