@@ -24,6 +24,7 @@ class PerceptionResult:
     answer: str
     objects: list[DetectedObject]
     target: Optional[DetectedObject] = None
+    target_regions: Optional[list[str]] = None
     reason: Optional[str] = None
 
 # def perceive(image, query: str) -> PerceptionResult:
