@@ -1,0 +1,21 @@
+trial,image,target,view,qwen_status,iou,correct,failure_type
+1,trial_001.png,blue cube,standard,success,0.17015181896304785,False,poor_localization
+2,trial_002.png,grey stone,standard,not_found,0.0,False,missed_target
+3,trial_003.png,green cylinder,standard,not_found,0.0,False,missed_target
+4,trial_004.png,blue cube,standard,found,0.15520534861509075,False,poor_localization
+5,trial_005.png,grey stone,left,not_found,0.0,False,missed_target
+6,trial_006.png,green cylinder,left,not_found,0.0,False,missed_target
+7,trial_007.png,blue cube,left,success,0.07555509868421052,False,poor_localization
+8,trial_008.png,grey stone,left,success,0.6127659574468085,True,
+9,trial_009.png,green cylinder,right,success,0.5283018867924528,True,
+10,trial_010.png,blue cube,right,success,0.3419267299864315,False,poor_localization
+11,trial_011.png,grey stone,right,not_found,0.0,False,missed_target
+12,trial_012.png,green cylinder,right,success,0.33030852994555354,False,poor_localization
+13,trial_013.png,blue cube,close,not_found,0.0,False,missed_target
+14,trial_014.png,grey stone,close,success,0.05603362017210326,False,poor_localization
+15,trial_015.png,green cylinder,close,success,0.3238095238095238,False,poor_localization
+16,trial_016.png,blue cube,close,success,0.4774193548387097,False,poor_localization
+17,trial_017.png,grey stone,far,success,0.2466427931960609,False,poor_localization
+18,trial_018.png,green cylinder,far,success,0.38461538461538464,False,poor_localization
+19,trial_019.png,blue cube,far,success,0.4064516129032258,False,poor_localization
+20,trial_020.png,grey stone,far,success,0.20480668756530826,False,poor_localization
