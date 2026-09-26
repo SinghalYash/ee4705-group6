@@ -24,9 +24,27 @@ def build_scene(image) -> dict:
     """
     built_scene = understand_scene(image,"What objects and target areas are visible?")
 
-    scene_info = {"objects": [f"{obj.color} {obj.label}".strip() if obj.color
-    else obj.label for obj in built_scene.objects],
-    "target_regions": built_scene.target_regions,
-}
+    if built_scene.status != "success":
+            return {
+                "objects": [],
+                "target_regions": [],
+            }
+
+    objects = [
+        f"{obj.color} {obj.label}".strip()
+        if obj.color
+        else obj.label
+        for obj in built_scene.objects
+    ]
+
+    target_regions = [
+        f"{region.get('color', '')} {region.get('label', '')}".strip()
+        for region in built_scene.target_regions
+    ]
+
+    scene_info = {
+        "objects": objects,
+        "target_regions": target_regions,
+    }
 
     return scene_info
