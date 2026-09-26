@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from robot_skills import (
+from task_4.robot_skills import (
     RobotSkills,
     ActionResult,
 )
@@ -35,6 +35,12 @@ OBJECT_ALIASES = {
     "cylinder": "cylinder",
     "green cylinder": "cylinder",
     "green_cylinder": "cylinder",
+    # From this camera angle a short cylinder can look round, so
+    # Task 2 sometimes reports it as a sphere/circle/ball instead.
+    "green sphere": "cylinder",
+    "green circle": "cylinder",
+    "green ball": "cylinder",
+    "green round object": "cylinder",
 
     # ------------------------------------------------------
     # STONE
@@ -47,6 +53,25 @@ OBJECT_ALIASES = {
     "sphere": "stone",
     "grey sphere": "stone",
     "gray sphere": "stone",
+    "grey circle": "stone",
+    "gray circle": "stone",
+    "grey ball": "stone",
+    "gray ball": "stone",
+    "grey round object": "stone",
+    "gray round object": "stone",
+}
+
+# Backstop for shape words we haven't explicitly listed above (e.g.
+# "square", "disc", "patch", "blob"...). Task 2's vision system can
+# describe the same object with a different shape word each time, but
+# in this fixed 3-object scene, color alone is unambiguous. Used by
+# normalise_object_name() only when an exact phrase match isn't found
+# above, so the specific aliases above still take priority.
+OBJECT_COLOR_HINTS = {
+    "blue": "box",
+    "green": "cylinder",
+    "gray": "stone",
+    "grey": "stone",
 }
 
 
@@ -54,11 +79,24 @@ TARGET_ALIASES = {
 
     "red_area": "red_area",
     "red area": "red_area",
+    "red_circle": "red_area",   # ADD THIS
+    "red circle": "red_area",
     "red zone": "red_area",
     "red region": "red_area",
     "red target": "red_area",
     "target area": "red_area",
     "target_area": "red_area",
+    "red marker": "red_area",
+    "red spot": "red_area",
+    "red mark": "red_area",
+    "red disc": "red_area",
+    "red patch": "red_area",
+}
+
+# Same idea as OBJECT_COLOR_HINTS, for target regions. Only one
+# colored region exists in the scene right now, so "red" is enough.
+TARGET_COLOR_HINTS = {
+    "red": "red_area",
 }
 
 
@@ -171,10 +209,18 @@ class Task4Executor:
             .lower()
         )
 
-        return OBJECT_ALIASES.get(
-            key,
-            key,
-        )
+        if key in OBJECT_ALIASES:
+            return OBJECT_ALIASES[key]
+
+        # No exact phrase match -- fall back to color, since the
+        # vision system may use a shape word we have not seen
+        # before (e.g. "blue square" instead of "blue box").
+        words = key.split()
+        for color, canonical in OBJECT_COLOR_HINTS.items():
+            if color in words:
+                return canonical
+
+        return key
 
     def normalise_target_name(
         self,
@@ -200,10 +246,17 @@ class Task4Executor:
             .lower()
         )
 
-        return TARGET_ALIASES.get(
-            key,
-            key,
-        )
+        if key in TARGET_ALIASES:
+            return TARGET_ALIASES[key]
+
+        # No exact phrase match -- fall back to color, for the
+        # same reason as normalise_object_name() above.
+        words = key.split()
+        for color, canonical in TARGET_COLOR_HINTS.items():
+            if color in words:
+                return canonical
+
+        return key
 
     # ======================================================
     # ACTION DISPATCH
