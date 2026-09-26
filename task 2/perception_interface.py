@@ -10,7 +10,7 @@ class DetectedObject:
 
     label: str
     color: Optional[str]
-    bbox: list[int]
+    bbox: Optional[list[int]] = None
     confidence: Optional[float] = None
 
 @dataclass
@@ -26,24 +26,24 @@ class PerceptionResult:
     target: Optional[DetectedObject] = None
     reason: Optional[str] = None
 
-def perceive(image, query: str) -> PerceptionResult:
-    """
-    Main visual perception interface.
+# def perceive(image, query: str) -> PerceptionResult:
+#     """
+#     Main visual perception interface.
 
-    Inputs
-    ------
-    image:
-        RGB image captured from the robot camera.
+#     Inputs
+#     ------
+#     image:
+#         RGB image captured from the robot camera.
 
-    query:
-        Natural-language question or instruction.
+#     query:
+#         Natural-language question or instruction.
 
-    Returns
-    -------
-    PerceptionResult:
-        Structured perception information.
-    """
+#     Returns
+#     -------
+#     PerceptionResult:
+#         Structured perception information.
+#     """
 
-    raise NotImplementedError(
-        "VLM connection will be implemented in Task 2(ii)."
-    )   
+#     raise NotImplementedError(
+#         "VLM connection will be implemented in Task 2(ii)."
+#     )   
