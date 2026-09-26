@@ -1,5 +1,3 @@
-
-
 import json
 import re
 from task_2.perception_interface import DetectedObject, PerceptionResult
@@ -30,58 +28,50 @@ def understand_scene(image, query: str) -> PerceptionResult:
     """
 
     prompt = f"""
-    You are the visual perception system of a robot.
+You are the visual perception system of a tabletop manipulation robot,
+viewing the scene from a fixed overhead/angled camera.
 
-    Look carefully at the provided camera image and answer
-    the following question:
+Question: "{query}"
 
-    "{query}"
+WHAT IS IN THE IMAGE:
+- A table with a small number of movable objects, and up to one flat
+  target region marked on the table surface.
+- The robot's own arm, gripper fingers, and mounting base. These are
+  the robot, NOT scene objects or target regions -- never report any
+  part of the arm/gripper/base as an object or a target region, even
+  if a part of it is a distinct color.
+- A flat colored circle/marker painted on the table is a TARGET
+  REGION, not an object, even if lighting makes it look raised.
 
-    Identify each distinct manipulable object and each designated
-    target region that is actually visible in the image.
+IDENTIFYING OBJECTS:
+- Because the camera looks down at a steep angle, a short cylinder, a
+  sphere, and a rounded stone can all look like a plain circle from
+  this view. When the exact shape is unclear, identify the object by
+  its COLOR rather than guessing the 3D shape.
+- Report the shape label you actually see, plus the color. If shape
+  is genuinely ambiguous, prefer a generic label such as "round
+  object" over a confident but possibly wrong shape guess -- color is
+  what matters most for downstream matching.
 
-    Return JSON only using exactly this structure:
+OUTPUT (JSON only, exactly this structure):
+{{
+    "status": "success",
+    "answer": "short description of the scene",
+    "objects": [
+        {{"label": "object type", "color": "object color"}}
+    ],
+    "target_regions": [
+        {{"label": "region type", "color": "region color"}}
+    ]
+}}
 
-    {{
-        "status": "success",
-        "answer": "short description of the scene",
-        "objects": [
-            {{
-                "label": "object type",
-                "color": "object color"
-            }}
-        ],
-        "target_regions": [
-            {{
-                "label": "region type",
-                "color": "region color"
-            }}
-        ]
-    }}
-
-    Important rules:
-
-    - Each physical object must appear exactly once in "objects".
-    - Do not list an object's color as a separate object.
-    - For example, a green sphere must be represented as:
-    {{"label": "sphere", "color": "green"}}
-    NOT as separate objects "green" and "sphere".
-
-    - A target region is not an object.
-    - Put designated areas, circles, markers, or zones only in
-    "target_regions".
-
-    - Describe objects using visually identifiable properties.
-    - Do not guess an object's semantic identity from appearance alone.
-    - For example, if something looks like a gray irregular object,
-    describe it visually rather than assuming it is a "stone".
-
-    - Only report items actually visible in the image.
-    - Do not invent objects.
-    - Do not duplicate objects.
-    - If no objects are visible, return an empty objects list.
-    - If no target regions are visible, return an empty target_regions list.
-    """
+RULES:
+- Each physical object appears exactly once in "objects"; never list
+  its color as a separate entry (a green sphere is one entry:
+  {{"label": "sphere", "color": "green"}}, not two).
+- Only report items actually visible in the image. Do not invent or
+  duplicate objects. Empty lists are fine if nothing is visible.
+"""
 
     response = ask_qwen(image, prompt)
     clean_response = clean_json_response(response)
@@ -160,6 +150,10 @@ def ground_object(
 
     query = f"""
 Locate the {target} in this image.
+
+The robot's own arm, gripper fingers, and mounting base are not
+objects -- ignore them completely, even if part of the arm happens
+to share a similar color with the target.
 
 Return the bounding box using normalized coordinates
 from 0 to 1000 in this order:
