@@ -1,17 +1,28 @@
 """
 Task 3: Natural-language -> structured action plan.
 
-Uses a MOCKED scene description (SCENE_MOCK below) instead of real VLM
-grounding, since Task 2 isn't built yet. Swap SCENE_MOCK for the actual
-output of Task 2's grounding module once it's ready -- the rest of this
-file (prompt, validation, plan_from_instruction) does not need to change.
+Scene information comes from Task 2 (task_3.scene_builder.build_scene,
+which calls task_2.perception.understand_scene) run on a live camera
+frame. plan_from_instruction() accepts either an already-captured
+image, a precomputed scene_info dict, or nothing -- in which case it
+renders a fresh frame from scene.xml itself, purely so this file can
+still be run standalone for manual testing without a caller supplying
+an image.
 """
 
 import json
 import os
+from pathlib import Path
 from openai import OpenAI
-from scene_builder import build_scene
 from PIL import Image
+
+# Works both when imported as a package ("from task_3.planner import
+# ...", e.g. from Task 5) and when run directly ("python planner.py"
+# from inside task_3/, e.g. for manual testing).
+try:
+    from task_3.scene_builder import build_scene
+except ImportError:
+    from scene_builder import build_scene
 
 # ---------------------------------------------------------------------------
 # Provider configuration. Default: OpenAI. Uncomment ONE alternative block
@@ -110,6 +121,30 @@ that the target is ambiguous.
 
 Do not treat a missing color adjective as meaning the object
 does not exist.
+
+COLOR IS THE PRIMARY WAY TO IDENTIFY AN OBJECT:
+
+The camera looks down at a steep angle, so the vision system's shape
+word for an object is unreliable -- it may call the same object a
+"sphere", "circle", "square", "disc", "blob", or any other shape word
+depending on the frame, while its COLOR stays reliable. This is not
+just a tie-breaker for when color and shape disagree: treat ANY
+scene object of a given color as that canonical object, no matter
+what shape word came with it, as long as only one object of that
+color is present in the scene:
+
+- ANY blue object   -> box       (blue square, blue circle, blue blob, blue anything -> box)
+- ANY green object  -> cylinder  (green sphere, green square, green anything -> cylinder)
+- ANY gray/grey object -> stone  (gray circle, grey blob, gray anything -> stone)
+
+Only fall back to matching by shape word alone when the scene object
+has no color given at all. If two or more visible objects share the
+same color, do not guess -- treat it as ambiguous per the rules
+above.
+
+The same applies to the target region: any reddish target region
+(whatever shape word it's given -- "red circle", "red area", "red
+patch", etc.) is "red_area".
 
 TARGET REGION MATCHING RULES:
 
@@ -436,11 +471,50 @@ def validate_action_plan(
         None,
     )
 
-def plan_from_instruction(instruction: str) -> dict:
-    """Call the LLM planner and return a validated action-plan dict."""
+def _capture_live_test_image(camera_name: str = "overhead_cam"):
+    """
+    Render a fresh frame straight from scene.xml.
 
-    camera_frame = Image.open(r"C:\Yash\NUS\Year 4\EE4705\Project\camera_test_overhead.png")
-    scene_info = build_scene(image=camera_frame)
+    Only used when plan_from_instruction() is called with neither an
+    image nor a scene_info -- i.e. when this file is run standalone
+    (`python planner.py`) for manual testing, with no Task 5 pipeline
+    supplying a live camera frame. This replaces the old hardcoded,
+    machine-specific test image path.
+    """
+
+    import mujoco
+
+    project_root = Path(__file__).resolve().parent.parent
+    model = mujoco.MjModel.from_xml_path(str(project_root / "scene.xml"))
+    data = mujoco.MjData(model)
+    mujoco.mj_forward(model, data)
+
+    renderer = mujoco.Renderer(model, height=480, width=640)
+    renderer.update_scene(data, camera=camera_name)
+    rgb = renderer.render()
+    renderer.close()
+
+    return Image.fromarray(rgb)
+
+
+def plan_from_instruction(instruction: str, image=None, scene_info=None) -> dict:
+    """
+    Call the LLM planner and return a validated action-plan dict.
+
+    Scene information is obtained, in priority order:
+        1. scene_info, if the caller already computed it (avoids a
+           second Task 2 call when Task 5 already ran perception this
+           frame).
+        2. image, run through Task 2's build_scene() -- pass in the
+           live frame captured from the robot's camera.
+        3. Neither given: render a fresh frame from scene.xml here,
+           for standalone/manual testing only.
+    """
+
+    if scene_info is None:
+        if image is None:
+            image = _capture_live_test_image()
+        scene_info = build_scene(image=image)
 
     objects = scene_info["objects"]
     target_regions = scene_info["target_regions"]
