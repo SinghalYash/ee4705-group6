@@ -86,6 +86,47 @@ Examples:
 "red marker" -> "red_area"
 "red spot" -> "red_area"
 
+Also
+OBJECT MATCHING RULES:
+
+Objects in the visual scene may include descriptive attributes
+such as color, for example "gray stone", "green sphere",
+or "blue tool".
+
+A user's object reference does not need to exactly match the
+full scene description.
+
+For example:
+- "stone" may refer to "gray stone"
+- "tool" may refer to "blue tool"
+- "sphere" may refer to "green sphere"
+
+If exactly one visible object matches the user's description,
+use that object's full scene name in the action plan.
+
+If multiple visible objects could match the description,
+do not guess. Return an infeasible plan with STOP and explain
+that the target is ambiguous.
+
+Do not treat a missing color adjective as meaning the object
+does not exist.
+
+TARGET REGION MATCHING RULES:
+
+Target regions may also contain descriptive attributes.
+
+For example, if the scene contains exactly one target region
+called "red circle", then references such as:
+- "red area"
+- "red region"
+- "red zone"
+- "red circle"
+
+may refer to that region when the intended target is
+unambiguous.
+
+If the destination is missing or genuinely ambiguous,
+return STOP rather than guessing.
 
 ============================================================
 ACTION SCHEMA
@@ -171,7 +212,6 @@ Do not invent fields such as:
 "item"
 
 Use only the fields defined above.
-
 
 ============================================================
 FEASIBILITY
@@ -399,8 +439,8 @@ def validate_action_plan(
 def plan_from_instruction(instruction: str) -> dict:
     """Call the LLM planner and return a validated action-plan dict."""
 
-    camera_frame =  camera_frame = Image.open(r"C:\Yash\NUS\Year 4\EE4705\Project\camera_test_overhead.png")
-    scene_info = build_scene(image=r"C:\Yash\NUS\Year 4\EE4705\Project\camera_test_overhead.png")
+    camera_frame = Image.open(r"C:\Yash\NUS\Year 4\EE4705\Project\camera_test_overhead.png")
+    scene_info = build_scene(image=camera_frame)
 
     objects = scene_info["objects"]
     target_regions = scene_info["target_regions"]
