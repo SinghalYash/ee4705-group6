@@ -1,16 +1,7 @@
 import json
 import re
-
-from perception_interface import (
-    DetectedObject,
-    PerceptionResult,
-)
-
-from qwen_backend import (
-    ask_qwen,
-    bbox_to_pixels,
-)
-
+from perception_interface import DetectedObject, PerceptionResult
+from qwen_backend import ask_qwen,bbox_to_pixels
 
 def clean_json_response(response: str) -> str:
     """
@@ -22,6 +13,113 @@ def clean_json_response(response: str) -> str:
         "",
         response,
     ).strip()
+
+def understand_scene(image, query: str) -> PerceptionResult:
+    """
+    Ask Qwen a general question about the current scene.
+
+    Examples:
+        "What objects are visible?"
+        "What is in the scene?"
+        "Which objects are near the robot?"
+        "Which object is inside the red area?"
+
+    Returns structured scene information.
+    """
+
+    prompt = f"""You are the visual perception system of a robot.
+
+        Look carefully at the provided camera image and answer
+        the following question:
+
+        "{query}"
+
+        Identify task-relevant objects and target regions that
+        are actually visible in the image.
+
+        Return JSON only using this exact structure:
+
+        {{
+            "status": "success",
+            "answer": "short natural-language answer",
+            "objects": [
+                {{
+                    "label": "object name",
+                    "color": "object color"
+                }}
+            ],
+            "target_regions": [
+                "region name"
+            ]
+        }}
+
+        Rules:
+
+        - Only report objects that are actually visible.
+        - Do not invent objects.
+        - Use simple object names where possible.
+        - Include the color when it is visually identifiable.
+        - Target regions are designated areas such as a red area,
+        blue area, marker, zone, or platform.
+        - If no relevant objects are visible, return an empty
+        objects list.
+        - If no target regions are visible, return an empty
+        target_regions list.
+        """
+
+    response = ask_qwen(image, prompt)
+    clean_response = clean_json_response(response)
+
+    try:
+        result = json.loads(clean_response)
+
+    except json.JSONDecodeError:
+
+        return PerceptionResult(
+            status="error",
+            query=query,
+            answer="Qwen returned invalid JSON.",
+            objects=[],
+            target=None,
+            # target_regions=[],
+            reason=clean_response,
+        )
+
+    # CONVERT OBJECTS INTO DetectedObject INSTANCES
+
+    detected_objects = []
+
+    for obj in result.get("objects", []):
+
+        detected_objects.append(
+            DetectedObject(
+                label=obj.get(
+                    "label",
+                    "unknown",
+                ),
+                color=obj.get(
+                    "color"
+                ),
+                bbox=None,
+                confidence=None,
+            )
+        )
+    # RETURN STRUCTURED RESULT
+
+    return PerceptionResult(
+        status=result.get(
+            "status",
+            "success",
+        ),
+        query=query,
+        answer=result.get(
+            "answer",
+            "",
+        ),
+        objects=detected_objects,
+        target=None,
+        reason=None,
+    )
 
 
 def ground_object(
@@ -69,12 +167,7 @@ If the target is not visible, return:
     # ASK QWEN3
     # ------------------------------------------------------
 
-    response = ask_qwen(
-        model,
-        processor,
-        image,
-        query,
-    )
+    response = ask_qwen(image,query)
 
 
     # ------------------------------------------------------
