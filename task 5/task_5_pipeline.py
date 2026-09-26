@@ -322,139 +322,160 @@ if __name__ == "__main__":
         else get_instruction()
     )
 
-    # ------------------------------------------------------
-    # TASK 4 EXECUTOR
+  # ------------------------------------------------------
+    # CREATE TASK 4 EXECUTOR ONCE
     # ------------------------------------------------------
 
-    print(
-        "Creating Task 4 executor..."
-    )
+    print("Creating Task 4 executor...")
 
     executor = Task4Executor()
 
-
-    # ------------------------------------------------------
-    # CONNECT TASK 2 TO TASK 4
-    # ------------------------------------------------------
-
+    # Connect Task 2 perception to Task 4.
     executor.robot.perception_callback = (
         create_perception_callback(
             executor.robot,
         )
     )
 
-
-    # ------------------------------------------------------
-    # TASK 2 SCENE SNAPSHOT FOR TASK 3
-    # ------------------------------------------------------
-    # Capture one live frame now and hand it to the planner, instead
-    # of the planner re-opening a hardcoded local test image. Task 4
-    # will keep re-grounding against fresh frames of its own via the
-    # perception_callback above as it executes each action.
-
-    print(
-        "\nCapturing scene for Task 3 planning..."
-    )
-
-    planning_image, _ = capture_rgbd(
-        executor.robot,
-        camera_name="overhead_cam",
-    )
+    print("\nTask 5 system ready.")
+    print("Type 'quit' or 'exit' to stop.")
 
 
-    # ------------------------------------------------------
-    # TASK 3 PLANNING
-    # ------------------------------------------------------
+    # ======================================================
+    # CONTINUOUS TASK 5 LOOP
+    # ======================================================
 
-    print(
-        "\nGenerating Task 3 plan..."
-    )
+    while True:
 
-    plan = plan_from_instruction(
-        instruction,
-        image=planning_image,
-    )
+        # --------------------------------------------------
+        # GET NEXT INSTRUCTION
+        # --------------------------------------------------
+
+        instruction = get_instruction()
+
+        if not instruction:
+            continue
+
+        if instruction.lower() in {
+            "quit",
+            "exit",
+            "q",
+        }:
+            print("\nStopping Task 5.")
+            break
 
 
-    print(
-        "\nTask 3 plan:"
-    )
-
-    print(
-        plan
-    )
-
-
-    # ------------------------------------------------------
-    # CHECK PLAN
-    # ------------------------------------------------------
-
-    if not plan.get(
-        "feasible",
-        False,
-    ):
+        # --------------------------------------------------
+        # CAPTURE CURRENT SCENE
+        # --------------------------------------------------
 
         print(
-            "\nTask 3 marked the "
-            "instruction as infeasible."
+            "\nCapturing scene for Task 3 planning..."
         )
 
-        raise SystemExit
+        planning_image, _ = capture_rgbd(
+            executor.robot,
+            camera_name="overhead_cam",
+        )
 
 
-    # ------------------------------------------------------
-    # TASK 4 EXECUTION
-    # ------------------------------------------------------
+        # --------------------------------------------------
+        # TASK 3 PLANNING
+        # --------------------------------------------------
 
-    print(
-        "\nExecuting Task 5 pipeline..."
-    )
+        print(
+            "\nGenerating Task 3 plan..."
+        )
 
-    report = executor.execute_plan(
-        plan
-    )
+        plan = plan_from_instruction(
+            instruction,
+            image=planning_image,
+        )
+
+        print(
+            "\nTask 3 plan:"
+        )
+
+        print(plan)
 
 
-    # ------------------------------------------------------
-    # FINAL RESULT
-    # ------------------------------------------------------
+        # --------------------------------------------------
+        # CHECK PLAN
+        # --------------------------------------------------
 
-    print(
-        "\n"
-        + "=" * 60
-    )
+        if not plan.get(
+            "feasible",
+            False,
+        ):
 
-    print(
-        "TASK 5 FINAL RESULT"
-    )
+            print(
+                "\nTask 3 marked the "
+                "instruction as infeasible."
+            )
 
-    print(
-        "=" * 60
-    )
+            # IMPORTANT:
+            # Do not exit the entire program.
+            # Go back and ask for another instruction.
+            continue
 
-    print(
-        "Instruction:",
-        instruction,
-    )
 
-    print(
-        "Success:",
-        report.success,
-    )
+        # --------------------------------------------------
+        # TASK 4 EXECUTION
+        # --------------------------------------------------
 
-    print(
-        "Completed actions:",
-        report.completed_actions,
-        "/",
-        report.total_actions,
-    )
+        print(
+            "\nExecuting Task 5 pipeline..."
+        )
 
-    print(
-        "Failure reason:",
-        report.failure_reason,
-    )
+        report = executor.execute_plan(
+            plan
+        )
 
-    print(
-        "Final placement error:",
-        report.final_placement_error,
-    )
+
+        # --------------------------------------------------
+        # FINAL RESULT
+        # --------------------------------------------------
+
+        print(
+            "\n"
+            + "=" * 60
+        )
+
+        print(
+            "TASK 5 FINAL RESULT"
+        )
+
+        print(
+            "=" * 60
+        )
+
+        print(
+            "Instruction:",
+            instruction,
+        )
+
+        print(
+            "Success:",
+            report.success,
+        )
+
+        print(
+            "Completed actions:",
+            report.completed_actions,
+            "/",
+            report.total_actions,
+        )
+
+        print(
+            "Failure reason:",
+            report.failure_reason,
+        )
+
+        print(
+            "Final placement error:",
+            report.final_placement_error,
+        )
+
+        print(
+            "\nReady for next instruction."
+        )
