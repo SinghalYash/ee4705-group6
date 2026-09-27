@@ -1,0 +1,13 @@
+# Core dependencies for the full system (Tasks 1-5).
+# Python 3.10-3.13. Install with:  pip install -r requirements.txt
+mujoco
+numpy
+pillow
+openai
+opencv-python
+SpeechRecognition
+
+# Optional, for spoken instructions (install separately; needs PortAudio on macOS/Linux):
+#   pip install pyaudio
+# Optional, for Task 2 local-model experiments only (see README section 5.3):
+#   torch torchvision "transformers>=4.57" accelerate qwen-vl-utils
