@@ -1,265 +1,89 @@
 ﻿trial,id,group,category,scene,instruction,expected,got,outcome,correct,detail,note,latency_s
-1,S01,core,standard,default,Pick up the stone and place it in the red area.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,2.113
-1,S02,core,standard,default,Move the box to the red area.,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,1.023
-1,S03,core,standard,default,Take the cylinder and place it in the red area.,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,,0.886
-1,S04,core,standard,default,Grab the stone and put it in the red zone.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,0.847
-1,S05,core,standard,default,Place the box into the red area.,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,1.063
-1,S06,core,standard,default,Put the cylinder in the red area.,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,,0.714
-1,S07,core,standard,default,Move the stone to the red area.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,0.999
-1,P01,core,paraphrase,default,Could you move that rock to the red zone?,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,1.03
-1,P02,core,paraphrase,default,Please pick up the nearby stone and place it on the red marker.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,0.82
-1,P03,core,paraphrase,default,Grab that cylinder and drop it in the red spot.,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,,0.958
-1,P04,core,paraphrase,default,Take the box over to the target area.,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,1.209
-1,P05,core,paraphrase,default,Find the stone and bring it to the red region.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,1.011
-1,P06,core,paraphrase,default,"I'd like the cube moved onto the red target, please.",box -> red_area,box -> red_area,correct,True,planned box -> red_area,,0.94
-1,P07,core,paraphrase,default,Can you carry the block over to the red zone?,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,0.858
-1,P08,core,paraphrase,default,Relocate the pebble to the target region.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,1.274
-1,P09,core,paraphrase,default,Would you mind setting the green can down in the red area?,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,,0.837
-1,P10,core,paraphrase,default,Transfer the box onto the red spot.,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,0.843
-1,P11,core,paraphrase,default,robot bring the rock to the goal,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,"no punctuation, 'goal' as the target word",0.924
-1,P12,core,paraphrase,default,The cylinder needs to go in the red area.,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,declarative rather than imperative,0.942
-1,C01,core,colour_wording,default,move blue to red,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,0.924
-1,C02,core,colour_wording,default,move box to red circle,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,0.967
-1,C03,core,colour_wording,default,move blue square to red area,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,1.087
-1,C04,core,colour_wording,default,Put the green one in the red circle.,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,,1.086
-1,C05,core,colour_wording,default,Place the grey ball in the red area.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,0.87
-1,C06,core,colour_wording,default,move green to the target,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,,1.147
-1,C07,core,colour_wording,default,Put the blue thing on the red marker.,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,1.049
-1,C08,core,colour_wording,default,move the gray sphere to red,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,0.85
-1,C09,core,colour_wording,default,Move the sphere to the target.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,the stone is a sphere in scene.xml and Task 2 reports 'gray sphere',0.995
-1,A01,core,alt_scene,alt_wording,Move the box to the red area.,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,0.792
-1,A02,core,alt_scene,alt_wording,Put the rock in the red zone.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,0.983
-1,A03,core,alt_scene,alt_wording,Take the green cylinder to the target.,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,,0.742
-1,A04,core,alt_scene,alt_wording,move blue to red,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,0.868
-1,A05,core,alt_scene,target_as_object,Move the box to the red area.,box -> red_area,box -> red_area,correct,True,planned box -> red_area,Task 2 listed the red region as an object,0.875
-1,A06,core,alt_scene,duplicate_detection,Move the box to the red area.,box -> red_area,box -> red_area,correct,True,planned box -> red_area,Task 2 reported the cube twice,0.696
-1,U01,core,unknown_object,default,Pick up the banana and place it in the red area.,infeasible,infeasible,correct,True,there is no banana in the scene,,0.672
-1,U02,core,unknown_object,default,Pick up the laptop and put it in the red zone.,infeasible,infeasible,correct,True,no laptop is present in the scene,,1.576
-1,U03,core,unknown_object,default,Grab the chair and place it in the red area.,infeasible,infeasible,correct,True,there is no object named 'chair' in the scene,,0.855
-1,U04,core,unknown_object,default,Move the pyramid to the target.,infeasible,infeasible,correct,True,no pyramid is in the scene,,0.699
-1,U05,core,unknown_object,default,Move the apple to the red area.,infeasible,infeasible,correct,True,there is no object named 'apple' in the scene,,1.091
-1,U06,core,unknown_object,default,Put the red ball in the red area.,infeasible,infeasible,correct,True,there is no red ball in the scene; the only ball is the gray stone,no red object exists; the only red thing is the target region,1.027
-1,D01,core,bad_destination,default,Grab the stone and place it in the green zone.,infeasible,infeasible,correct,True,there is no green target region; the only target is red_area,,0.998
-1,D02,core,bad_destination,default,Put the cylinder in the yellow area.,infeasible,infeasible,correct,True,there is no yellow target region; the only target region is red_area,,0.778
-1,D03,core,bad_destination,default,Put the stone on the moon.,infeasible,infeasible,correct,True,there is no target region named 'moon'; the only target is red_area,,0.926
-1,D04,core,bad_destination,default,Move the box to the blue area.,infeasible,infeasible,correct,True,there is no blue target region in the scene; only the red_area exists,,1.265
-1,D05,core,bad_destination,default,Put the box on the table.,infeasible,infeasible,correct,True,the table is not a named target region; only red_area is recognized as a valid target,the table is not a target region,1.09
-1,D06,core,bad_destination,default,Place the cylinder on the robot's base.,infeasible,infeasible,correct,True,the robot's base is not a defined target region; only red_area is recognized as a target,,1.198
-1,N01,core,no_destination,default,Pick up the cylinder.,infeasible,infeasible,correct,True,"no destination was given; the instruction only says to pick up, not move to a region",,0.821
-1,N02,core,no_destination,default,Grab the rock.,infeasible,infeasible,correct,True,"no destination was given; the instruction only says to grab, not move to a region",,0.669
-1,N03,core,no_destination,default,Lift the blue box.,infeasible,infeasible,correct,True,"no destination was given; the instruction only says to lift, not move to a region",,1.547
-1,N04,core,no_destination,default,Hold the cylinder.,infeasible,infeasible,correct,True,"no destination was given; the instruction only asks to hold the object, not move it to a region",,0.704
-1,M01,core,not_manipulation,default,Move the robot to Mars.,infeasible,infeasible,correct,True,"the instruction asks to move the robot itself, not an object in the scene, and Mars is not a present target region",,0.77
-1,M02,core,not_manipulation,default,Fly the drone to the red area.,infeasible,infeasible,correct,True,the drone is not an object in the scene that the robot can move,,0.99
-1,M03,core,not_manipulation,default,Delete the box.,infeasible,infeasible,correct,True,"the instruction asks to delete, not move to a target region",,1.077
-1,M04,core,not_manipulation,default,What colour is the box?,infeasible,infeasible,correct,True,"the instruction is a question about colour, not a move-an-object-to-a-region task",,0.656
-1,M05,core,not_manipulation,default,Dance.,infeasible,infeasible,correct,True,the instruction 'Dance' is not a move-an-object-to-a-region task,,1.087
-1,M06,core,not_manipulation,default,Paint the box red.,infeasible,infeasible,correct,True,"the instruction asks to paint, not move; no painting action or tool is available, and no destination region is specified for a move operation",,0.818
-1,M07,core,not_manipulation,default,Move the red area to the box.,infeasible,infeasible,correct,True,"the red area is a target region, not an object that can be moved; the instruction asks to move a region, which is not feasible",the target region is painted on the table and cannot be moved,0.941
-1,V01,core,not_in_scene,no_cylinder,Move the cylinder to the red area.,infeasible,infeasible,correct,True,"'cylinder' is not visible in the current scene (scene: blue square -> box, gray sphere -> stone, red circle -> red_area)",,0.752
-1,V02,core,not_in_scene,no_target,Move the box to the red area.,infeasible,infeasible,correct,True,no target region named 'red area' is detected in the scene,,1.081
-1,V03,core,not_in_scene,no_cylinder,Put the green one in the red zone.,infeasible,infeasible,correct,True,"'cylinder' is not visible in the current scene (scene: blue square -> box, gray sphere -> stone, red circle -> red_area)",,1.097
-1,V04,core,not_in_scene,empty,Move the stone to the red area.,infeasible,infeasible,correct,True,no stone is present in the current scene,,0.722
-1,X01,stress,spatial_reference,default,Move the object closest to the robot base to the red area.,cylinder -> red_area,box -> red_area,wrong_plan,False,planned box -> red_area,cylinder is nearest (0.31 m vs 0.33 m); the scene description has no positions,0.974
-1,X02,stress,spatial_reference,default,Move the object furthest from the red area into it.,stone -> red_area,infeasible,false_reject,False,"'the object furthest from the red area' is red, but the only matching object (stone) is gray",stone is furthest (0.38 m); needs position information the planner does not get,1.137
-1,X03,stress,spatial_reference,default,Move the object between the stone and the cylinder to the red area.,box -> red_area,infeasible,false_reject,False,"'the object between the stone and the cylinder' names the cylinder, not the box",box lies between them along y; needs spatial layout,1.155
-1,X04,stress,multi_object,default,Move the box and the stone to the red area.,"box -> red_area, stone -> red_area",box -> red_area,wrong_plan,False,planned box -> red_area,robot can do this as two sequential moves; planner only supports one object,1.581
-1,X05,stress,multi_object,default,Put everything in the red area.,"box -> red_area, stone -> red_area, cylinder -> red_area",infeasible,false_reject,False,"the instruction asks to move all objects, but the robot can only move one object per turn; it is not a single-object-to-target task",,1.092
-1,X06,stress,multi_object,default,"Move the cylinder to the red area, then the box.","cylinder -> red_area, box -> red_area",cylinder -> red_area,wrong_plan,False,planned cylinder -> red_area,,0.828
-1,X07,stress,negation,default,"Don't move the box, move the stone to the red area.",stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,1.24
-1,X08,stress,negation,default,Do not move the box to the red area.,infeasible,infeasible,correct,True,"the instruction is a negative command (do not move), which is not a move-an-object-to-a-region task.",negated command: nothing should be planned,0.913
-1,X09,stress,negation,default,Move every object except the cylinder to the red area.,"box -> red_area, stone -> red_area",infeasible,false_reject,False,"the instruction asks to move multiple objects, but the robot can only move one object per command; it cannot execute 'every object except the cylinder' in a single move.",,1.818
-1,X10,stress,ambiguous_reference,default,Move the round object to the red area.,infeasible,stone -> red_area,false_accept,False,planned stone -> red_area,both the stone (sphere) and cylinder (round from above) fit; should not guess,0.934
-1,X11,stress,ambiguous_reference,default,Move it to the red area.,infeasible,box -> red_area,false_accept,False,planned box -> red_area,no referent for 'it',1.658
-1,X12,stress,ambiguous_reference,default,Move the green box to the red area.,infeasible,infeasible,correct,True,"there is no green box; the green object is a cylinder, not a box","contradictory: the box is blue, the green object is a cylinder",0.852
-1,X13,stress,unsupported_placement,default,Move the box next to the red area.,infeasible,box -> red_area,false_accept,False,planned box -> red_area,PLACE puts objects inside the region; 'next to' cannot be executed,1.172
-1,X14,stress,unsupported_placement,default,Move the stone away from the red area.,infeasible,infeasible,correct,True,"the instruction does not specify a destination for the stone, only to move it away from the red area, which is not a valid target region for a move-to operation.",opposite of the only supported placement,1.547
-1,X15,stress,unsupported_placement,default,"Place the box in the red area, then stack the stone on top of it.",infeasible,box -> red_area,false_accept,False,planned box -> red_area,stacking is not a supported skill; a partial plan is not correct,0.805
-1,X16,stress,unsupported_placement,default,Move the cylinder to the red area and then bring it back.,infeasible,cylinder -> red_area,false_accept,False,planned cylinder -> red_area,no skill for returning an object to its start pose,0.786
-1,X17,stress,distractor,default,"The stone is too heavy, so move the cylinder to the red area instead.",cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,first object mentioned is not the one to move,1.059
-1,X18,stress,distractor,default,Leave the blue box where it is and put the grey stone in the red zone.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,0.934
-1,X19,stress,speech_noise,default,move the books to the read area,box -> red_area,infeasible,false_reject,False,"no object named 'books' is present in the scene, and 'read area' is not a valid target (should be 'red area')}","speech-to-text errors: box -> books, red -> read",0.922
-1,X20,stress,speech_noise,default,put the rack in the red zone,stone -> red_area,infeasible,false_reject,False,no object named 'rack' is present in the scene,rock -> rack,0.817
-1,X21,stress,speech_noise,default,move the cilinder too the red aria,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,misspellings,1.248
-1,X22,stress,speech_noise,default,move the blue bocks to the red area,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,1.232
-1,X23,stress,non_english,default,Bewege den blauen Würfel in den roten Bereich.,box -> red_area,box -> red_area,correct,True,planned box -> red_area,German,1.312
-1,X24,stress,non_english,default,Pon la piedra en el área roja.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,Spanish,0.736
-1,X25,stress,non_english,default,把绿色的圆柱放到红色区域。,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,Chinese,1.53
-1,X26,stress,perception_error,stone_colour_misread,Move the stone to the red area.,stone -> red_area,infeasible,false_reject,False,"'stone' is not visible in the current scene (scene: blue square -> box, green circle -> cylinder, white sphere -> none, red circle -> red_area)",stone is physically present but Task 2 called it white; colour grounding cannot match it,0.89
-1,X27,stress,perception_error,target_colour_misread,Move the box to the red area.,box -> red_area,infeasible,false_reject,False,"there is no red area in the scene; only a purple circle is present, and no target region named 'red area' exists",red region reported as purple; colour grounding cannot match it,1.287
-2,S01,core,standard,default,Pick up the stone and place it in the red area.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,1.258
-2,S02,core,standard,default,Move the box to the red area.,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,1.099
-2,S03,core,standard,default,Take the cylinder and place it in the red area.,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,,1.124
-2,S04,core,standard,default,Grab the stone and put it in the red zone.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,0.995
-2,S05,core,standard,default,Place the box into the red area.,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,0.986
-2,S06,core,standard,default,Put the cylinder in the red area.,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,,1.088
-2,S07,core,standard,default,Move the stone to the red area.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,0.701
-2,P01,core,paraphrase,default,Could you move that rock to the red zone?,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,0.644
-2,P02,core,paraphrase,default,Please pick up the nearby stone and place it on the red marker.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,0.763
-2,P03,core,paraphrase,default,Grab that cylinder and drop it in the red spot.,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,,1.086
-2,P04,core,paraphrase,default,Take the box over to the target area.,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,0.823
-2,P05,core,paraphrase,default,Find the stone and bring it to the red region.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,0.74
-2,P06,core,paraphrase,default,"I'd like the cube moved onto the red target, please.",box -> red_area,box -> red_area,correct,True,planned box -> red_area,,0.854
-2,P07,core,paraphrase,default,Can you carry the block over to the red zone?,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,1.781
-2,P08,core,paraphrase,default,Relocate the pebble to the target region.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,1.476
-2,P09,core,paraphrase,default,Would you mind setting the green can down in the red area?,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,,0.738
-2,P10,core,paraphrase,default,Transfer the box onto the red spot.,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,0.709
-2,P11,core,paraphrase,default,robot bring the rock to the goal,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,"no punctuation, 'goal' as the target word",0.896
-2,P12,core,paraphrase,default,The cylinder needs to go in the red area.,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,declarative rather than imperative,0.869
-2,C01,core,colour_wording,default,move blue to red,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,0.86
-2,C02,core,colour_wording,default,move box to red circle,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,1.053
-2,C03,core,colour_wording,default,move blue square to red area,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,0.89
-2,C04,core,colour_wording,default,Put the green one in the red circle.,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,,0.856
-2,C05,core,colour_wording,default,Place the grey ball in the red area.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,0.705
-2,C06,core,colour_wording,default,move green to the target,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,,0.87
-2,C07,core,colour_wording,default,Put the blue thing on the red marker.,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,1.158
-2,C08,core,colour_wording,default,move the gray sphere to red,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,0.816
-2,C09,core,colour_wording,default,Move the sphere to the target.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,the stone is a sphere in scene.xml and Task 2 reports 'gray sphere',0.943
-2,A01,core,alt_scene,alt_wording,Move the box to the red area.,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,0.895
-2,A02,core,alt_scene,alt_wording,Put the rock in the red zone.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,1.248
-2,A03,core,alt_scene,alt_wording,Take the green cylinder to the target.,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,,0.699
-2,A04,core,alt_scene,alt_wording,move blue to red,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,0.687
-2,A05,core,alt_scene,target_as_object,Move the box to the red area.,box -> red_area,box -> red_area,correct,True,planned box -> red_area,Task 2 listed the red region as an object,0.96
-2,A06,core,alt_scene,duplicate_detection,Move the box to the red area.,box -> red_area,box -> red_area,correct,True,planned box -> red_area,Task 2 reported the cube twice,0.796
-2,U01,core,unknown_object,default,Pick up the banana and place it in the red area.,infeasible,infeasible,correct,True,there is no banana in the scene,,1.063
-2,U02,core,unknown_object,default,Pick up the laptop and put it in the red zone.,infeasible,infeasible,correct,True,no laptop is present in the scene,,1.251
-2,U03,core,unknown_object,default,Grab the chair and place it in the red area.,infeasible,infeasible,correct,True,there is no object named 'chair' in the scene,,0.682
-2,U04,core,unknown_object,default,Move the pyramid to the target.,infeasible,infeasible,correct,True,no pyramid is in the scene,,0.784
-2,U05,core,unknown_object,default,Move the apple to the red area.,infeasible,infeasible,correct,True,there is no object named 'apple' in the scene,,0.877
-2,U06,core,unknown_object,default,Put the red ball in the red area.,infeasible,infeasible,correct,True,there is no red ball in the scene; the only ball is the gray stone,no red object exists; the only red thing is the target region,1.119
-2,D01,core,bad_destination,default,Grab the stone and place it in the green zone.,infeasible,infeasible,correct,True,there is no green target region; the only target region is red_area,,0.998
-2,D02,core,bad_destination,default,Put the cylinder in the yellow area.,infeasible,infeasible,correct,True,there is no yellow target region; the only target region is red_area,,0.685
-2,D03,core,bad_destination,default,Put the stone on the moon.,infeasible,infeasible,correct,True,there is no target region named 'moon'; the only target is red_area,,1.389
-2,D04,core,bad_destination,default,Move the box to the blue area.,infeasible,infeasible,correct,True,there is no blue target region in the scene; only the red_area exists,,0.716
-2,D05,core,bad_destination,default,Put the box on the table.,infeasible,infeasible,correct,True,the table is not a named target region; only red_area is a valid target,the table is not a target region,0.859
-2,D06,core,bad_destination,default,Place the cylinder on the robot's base.,infeasible,infeasible,correct,True,the robot's base is not a defined target region; only red_area is recognized as a target,,1.238
-2,N01,core,no_destination,default,Pick up the cylinder.,infeasible,infeasible,correct,True,"no destination was given; the instruction only says to pick up, not move to a region",,0.858
-2,N02,core,no_destination,default,Grab the rock.,infeasible,infeasible,correct,True,"no destination was given; the instruction only says to grab, not move to a region",,0.835
-2,N03,core,no_destination,default,Lift the blue box.,infeasible,infeasible,correct,True,"no destination was given; the instruction only asks to lift, not move to a region",,1.571
-2,N04,core,no_destination,default,Hold the cylinder.,infeasible,infeasible,correct,True,"no destination was given; the instruction only asks to hold the object, not move it to a region",,0.802
-2,M01,core,not_manipulation,default,Move the robot to Mars.,infeasible,infeasible,correct,True,"the instruction asks to move the robot itself, not an object in the scene, and Mars is not a present target region",,1.083
-2,M02,core,not_manipulation,default,Fly the drone to the red area.,infeasible,infeasible,correct,True,the drone is not an object in the scene that the robot can move,,0.86
-2,M03,core,not_manipulation,default,Delete the box.,infeasible,infeasible,correct,True,"the instruction asks to delete the box, which is not a move-to-region action and has no destination",,0.841
-2,M04,core,not_manipulation,default,What colour is the box?,infeasible,infeasible,correct,True,"the instruction is a question about colour, not a move-an-object-to-a-region task",,0.647
-2,M05,core,not_manipulation,default,Dance.,infeasible,infeasible,correct,True,the instruction 'Dance' is not a move-an-object-to-a-region task and cannot be performed by the robot arm.,,1.081
-2,M06,core,not_manipulation,default,Paint the box red.,infeasible,infeasible,correct,True,"the instruction asks to paint, not move; no painting action is available",,0.865
-2,M07,core,not_manipulation,default,Move the red area to the box.,infeasible,infeasible,correct,True,"the red area is a target region, not an object that can be moved; the instruction asks to move a region, which is not feasible",the target region is painted on the table and cannot be moved,0.881
-2,V01,core,not_in_scene,no_cylinder,Move the cylinder to the red area.,infeasible,infeasible,correct,True,"'cylinder' is not visible in the current scene (scene: blue square -> box, gray sphere -> stone, red circle -> red_area)",,1.056
-2,V02,core,not_in_scene,no_target,Move the box to the red area.,infeasible,infeasible,correct,True,no target region named 'red area' is detected in the current scene,,1.251
-2,V03,core,not_in_scene,no_cylinder,Put the green one in the red zone.,infeasible,infeasible,correct,True,"'cylinder' is not visible in the current scene (scene: blue square -> box, gray sphere -> stone, red circle -> red_area)",,1.071
-2,V04,core,not_in_scene,empty,Move the stone to the red area.,infeasible,infeasible,correct,True,no stone is present in the current scene,,1.191
-2,X01,stress,spatial_reference,default,Move the object closest to the robot base to the red area.,cylinder -> red_area,box -> red_area,wrong_plan,False,planned box -> red_area,cylinder is nearest (0.31 m vs 0.33 m); the scene description has no positions,0.944
-2,X02,stress,spatial_reference,default,Move the object furthest from the red area into it.,stone -> red_area,infeasible,false_reject,False,"'the object furthest from the red area' is red, but the only matching object (stone) is gray",stone is furthest (0.38 m); needs position information the planner does not get,1.157
-2,X03,stress,spatial_reference,default,Move the object between the stone and the cylinder to the red area.,box -> red_area,infeasible,false_reject,False,"'the object between the stone and the cylinder' names the cylinder, not the box",box lies between them along y; needs spatial layout,1.009
-2,X04,stress,multi_object,default,Move the box and the stone to the red area.,"box -> red_area, stone -> red_area",box -> red_area,wrong_plan,False,planned box -> red_area,robot can do this as two sequential moves; planner only supports one object,1.135
-2,X05,stress,multi_object,default,Put everything in the red area.,"box -> red_area, stone -> red_area, cylinder -> red_area",infeasible,false_reject,False,the instruction asks to move all objects but does not specify a single object to move in this turn; it is not a move-an-object-to-a-region task for one object,,1.256
-2,X06,stress,multi_object,default,"Move the cylinder to the red area, then the box.","cylinder -> red_area, box -> red_area",cylinder -> red_area,wrong_plan,False,planned cylinder -> red_area,,1.138
-2,X07,stress,negation,default,"Don't move the box, move the stone to the red area.",stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,0.621
-2,X08,stress,negation,default,Do not move the box to the red area.,infeasible,infeasible,correct,True,"the instruction is a negative command (do not move), which is not a move-an-object-to-a-region task.",negated command: nothing should be planned,0.867
-2,X09,stress,negation,default,Move every object except the cylinder to the red area.,"box -> red_area, stone -> red_area",infeasible,false_reject,False,"the instruction asks to move multiple objects, but the robot can only move one object per command; it cannot execute 'every object except the cylinder' in a single move.",,1.06
-2,X10,stress,ambiguous_reference,default,Move the round object to the red area.,infeasible,stone -> red_area,false_accept,False,planned stone -> red_area,both the stone (sphere) and cylinder (round from above) fit; should not guess,0.678
-2,X11,stress,ambiguous_reference,default,Move it to the red area.,infeasible,stone -> red_area,false_accept,False,planned stone -> red_area,no referent for 'it',1.48
-2,X12,stress,ambiguous_reference,default,Move the green box to the red area.,infeasible,infeasible,correct,True,"there is no green box; the green object is a cylinder, not a box","contradictory: the box is blue, the green object is a cylinder",0.929
-2,X13,stress,unsupported_placement,default,Move the box next to the red area.,infeasible,box -> red_area,false_accept,False,planned box -> red_area,PLACE puts objects inside the region; 'next to' cannot be executed,0.765
-2,X14,stress,unsupported_placement,default,Move the stone away from the red area.,infeasible,infeasible,correct,True,"the instruction asks to move the stone away from the red area, but no destination region is specified—only a direction (away), not a target location.",opposite of the only supported placement,1.105
-2,X15,stress,unsupported_placement,default,"Place the box in the red area, then stack the stone on top of it.",infeasible,box -> red_area,false_accept,False,planned box -> red_area,stacking is not a supported skill; a partial plan is not correct,1.038
-2,X16,stress,unsupported_placement,default,Move the cylinder to the red area and then bring it back.,infeasible,cylinder -> red_area,false_accept,False,planned cylinder -> red_area,no skill for returning an object to its start pose,1.205
-2,X17,stress,distractor,default,"The stone is too heavy, so move the cylinder to the red area instead.",cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,first object mentioned is not the one to move,0.718
-2,X18,stress,distractor,default,Leave the blue box where it is and put the grey stone in the red zone.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,1.03
-2,X19,stress,speech_noise,default,move the books to the read area,box -> red_area,infeasible,false_reject,False,"no object named 'books' is present in the scene, and 'read area' is not a valid target (should be 'red area')}","speech-to-text errors: box -> books, red -> read",1.081
-2,X20,stress,speech_noise,default,put the rack in the red zone,stone -> red_area,infeasible,false_reject,False,no object named 'rack' is present in the scene,rock -> rack,1.356
-2,X21,stress,speech_noise,default,move the cilinder too the red aria,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,misspellings,1.166
-2,X22,stress,speech_noise,default,move the blue bocks to the red area,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,1.011
-2,X23,stress,non_english,default,Bewege den blauen Würfel in den roten Bereich.,box -> red_area,box -> red_area,correct,True,planned box -> red_area,German,1.094
-2,X24,stress,non_english,default,Pon la piedra en el área roja.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,Spanish,0.853
-2,X25,stress,non_english,default,把绿色的圆柱放到红色区域。,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,Chinese,1.028
-2,X26,stress,perception_error,stone_colour_misread,Move the stone to the red area.,stone -> red_area,infeasible,false_reject,False,"'stone' is not visible in the current scene (scene: blue square -> box, green circle -> cylinder, white sphere -> none, red circle -> red_area)",stone is physically present but Task 2 called it white; colour grounding cannot match it,0.867
-2,X27,stress,perception_error,target_colour_misread,Move the box to the red area.,box -> red_area,infeasible,false_reject,False,"'red_area' is not visible in the current scene (scene: blue square -> box, green circle -> cylinder, gray sphere -> stone, purple circle -> none)",red region reported as purple; colour grounding cannot match it,0.838
-3,S01,core,standard,default,Pick up the stone and place it in the red area.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,1.609
-3,S02,core,standard,default,Move the box to the red area.,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,0.799
-3,S03,core,standard,default,Take the cylinder and place it in the red area.,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,,0.865
-3,S04,core,standard,default,Grab the stone and put it in the red zone.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,1.347
-3,S05,core,standard,default,Place the box into the red area.,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,0.948
-3,S06,core,standard,default,Put the cylinder in the red area.,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,,0.797
-3,S07,core,standard,default,Move the stone to the red area.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,0.847
-3,P01,core,paraphrase,default,Could you move that rock to the red zone?,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,0.683
-3,P02,core,paraphrase,default,Please pick up the nearby stone and place it on the red marker.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,0.91
-3,P03,core,paraphrase,default,Grab that cylinder and drop it in the red spot.,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,,0.713
-3,P04,core,paraphrase,default,Take the box over to the target area.,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,1.31
-3,P05,core,paraphrase,default,Find the stone and bring it to the red region.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,0.704
-3,P06,core,paraphrase,default,"I'd like the cube moved onto the red target, please.",box -> red_area,box -> red_area,correct,True,planned box -> red_area,,1.664
-3,P07,core,paraphrase,default,Can you carry the block over to the red zone?,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,0.866
-3,P08,core,paraphrase,default,Relocate the pebble to the target region.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,0.947
-3,P09,core,paraphrase,default,Would you mind setting the green can down in the red area?,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,,1.02
-3,P10,core,paraphrase,default,Transfer the box onto the red spot.,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,0.66
-3,P11,core,paraphrase,default,robot bring the rock to the goal,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,"no punctuation, 'goal' as the target word",1.043
-3,P12,core,paraphrase,default,The cylinder needs to go in the red area.,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,declarative rather than imperative,1.209
-3,C01,core,colour_wording,default,move blue to red,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,0.657
-3,C02,core,colour_wording,default,move box to red circle,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,0.659
-3,C03,core,colour_wording,default,move blue square to red area,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,0.741
-3,C04,core,colour_wording,default,Put the green one in the red circle.,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,,1.02
-3,C05,core,colour_wording,default,Place the grey ball in the red area.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,0.697
-3,C06,core,colour_wording,default,move green to the target,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,,0.974
-3,C07,core,colour_wording,default,Put the blue thing on the red marker.,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,0.953
-3,C08,core,colour_wording,default,move the gray sphere to red,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,0.789
-3,C09,core,colour_wording,default,Move the sphere to the target.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,the stone is a sphere in scene.xml and Task 2 reports 'gray sphere',1.13
-3,A01,core,alt_scene,alt_wording,Move the box to the red area.,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,1.582
-3,A02,core,alt_scene,alt_wording,Put the rock in the red zone.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,0.683
-3,A03,core,alt_scene,alt_wording,Take the green cylinder to the target.,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,,0.907
-3,A04,core,alt_scene,alt_wording,move blue to red,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,0.835
-3,A05,core,alt_scene,target_as_object,Move the box to the red area.,box -> red_area,box -> red_area,correct,True,planned box -> red_area,Task 2 listed the red region as an object,0.984
-3,A06,core,alt_scene,duplicate_detection,Move the box to the red area.,box -> red_area,box -> red_area,correct,True,planned box -> red_area,Task 2 reported the cube twice,0.699
-3,U01,core,unknown_object,default,Pick up the banana and place it in the red area.,infeasible,infeasible,correct,True,there is no banana in the scene,,0.727
-3,U02,core,unknown_object,default,Pick up the laptop and put it in the red zone.,infeasible,infeasible,correct,True,no laptop is present in the scene,,0.98
-3,U03,core,unknown_object,default,Grab the chair and place it in the red area.,infeasible,infeasible,correct,True,there is no object named 'chair' in the scene,,1.72
-3,U04,core,unknown_object,default,Move the pyramid to the target.,infeasible,infeasible,correct,True,no pyramid is in the scene,,0.824
-3,U05,core,unknown_object,default,Move the apple to the red area.,infeasible,infeasible,correct,True,there is no object named 'apple' in the scene,,0.708
-3,U06,core,unknown_object,default,Put the red ball in the red area.,infeasible,infeasible,correct,True,there is no red ball in the scene; the only ball is the gray stone,no red object exists; the only red thing is the target region,1.267
-3,D01,core,bad_destination,default,Grab the stone and place it in the green zone.,infeasible,infeasible,correct,True,"there is no green target region; the only target region is red_area, and 'green zone' does not match any known target",,0.988
-3,D02,core,bad_destination,default,Put the cylinder in the yellow area.,infeasible,infeasible,correct,True,there is no yellow target region; the only target region is red_area,,0.719
-3,D03,core,bad_destination,default,Put the stone on the moon.,infeasible,infeasible,correct,True,there is no target region named 'moon'; the only target is red_area,,1.006
-3,D04,core,bad_destination,default,Move the box to the blue area.,infeasible,infeasible,correct,True,there is no blue target region in the scene; only a red area exists,,1.351
-3,D05,core,bad_destination,default,Put the box on the table.,infeasible,infeasible,correct,True,the table is not a named target region; only red_area is a valid target,the table is not a target region,0.887
-3,D06,core,bad_destination,default,Place the cylinder on the robot's base.,infeasible,infeasible,correct,True,the robot's base is not a defined target region; only red_area is recognized as a target,,0.81
-3,N01,core,no_destination,default,Pick up the cylinder.,infeasible,infeasible,correct,True,"no destination was given; the instruction only says to pick up, not move to a region",,0.917
-3,N02,core,no_destination,default,Grab the rock.,infeasible,infeasible,correct,True,"no destination was given; the instruction only says to grab, not move to a region",,0.715
-3,N03,core,no_destination,default,Lift the blue box.,infeasible,infeasible,correct,True,"no destination was given; the instruction only says to lift, not move to a region",,1.237
-3,N04,core,no_destination,default,Hold the cylinder.,infeasible,infeasible,correct,True,"no destination was given; the instruction only asks to hold the object, not move it to a region",,0.913
-3,M01,core,not_manipulation,default,Move the robot to Mars.,infeasible,infeasible,correct,True,"the instruction asks to move the robot itself, not an object in the scene, and Mars is not a present target region",,0.761
-3,M02,core,not_manipulation,default,Fly the drone to the red area.,infeasible,infeasible,correct,True,the drone is not an object in the scene that the robot can move,,0.753
-3,M03,core,not_manipulation,default,Delete the box.,infeasible,infeasible,correct,True,"the instruction asks to delete the box, which is not a move-to-region action and has no destination",,0.946
-3,M04,core,not_manipulation,default,What colour is the box?,infeasible,infeasible,correct,True,"the instruction asks for a colour, not a move-to-region action",,0.649
-3,M05,core,not_manipulation,default,Dance.,infeasible,infeasible,correct,True,the instruction 'Dance' is not a move-an-object-to-a-region task and does not specify an object or destination for the robot to act upon.,,0.88
-3,M06,core,not_manipulation,default,Paint the box red.,infeasible,infeasible,correct,True,"the instruction asks to paint, not move; no painting action is available",,2.396
-3,M07,core,not_manipulation,default,Move the red area to the box.,infeasible,infeasible,correct,True,"the red area is a target region, not an object that can be moved; the instruction asks to move a region, which is not feasible",the target region is painted on the table and cannot be moved,0.799
-3,V01,core,not_in_scene,no_cylinder,Move the cylinder to the red area.,infeasible,infeasible,correct,True,"'cylinder' is not visible in the current scene (scene: blue square -> box, gray sphere -> stone, red circle -> red_area)",,0.718
-3,V02,core,not_in_scene,no_target,Move the box to the red area.,infeasible,infeasible,correct,True,no target region named 'red area' is detected in the current scene,,0.716
-3,V03,core,not_in_scene,no_cylinder,Put the green one in the red zone.,infeasible,infeasible,correct,True,"'cylinder' is not visible in the current scene (scene: blue square -> box, gray sphere -> stone, red circle -> red_area)",,1.169
-3,V04,core,not_in_scene,empty,Move the stone to the red area.,infeasible,infeasible,correct,True,no stone is present in the current scene,,0.88
-3,X01,stress,spatial_reference,default,Move the object closest to the robot base to the red area.,cylinder -> red_area,box -> red_area,wrong_plan,False,planned box -> red_area,cylinder is nearest (0.31 m vs 0.33 m); the scene description has no positions,1.194
-3,X02,stress,spatial_reference,default,Move the object furthest from the red area into it.,stone -> red_area,infeasible,false_reject,False,"'the object furthest from the red area' is red, but the only matching object (stone) is gray",stone is furthest (0.38 m); needs position information the planner does not get,0.869
-3,X03,stress,spatial_reference,default,Move the object between the stone and the cylinder to the red area.,box -> red_area,infeasible,false_reject,False,"'the object between the stone and the cylinder' names the cylinder, not the box",box lies between them along y; needs spatial layout,0.997
-3,X04,stress,multi_object,default,Move the box and the stone to the red area.,"box -> red_area, stone -> red_area",box -> red_area,wrong_plan,False,planned box -> red_area,robot can do this as two sequential moves; planner only supports one object,1.196
-3,X05,stress,multi_object,default,Put everything in the red area.,"box -> red_area, stone -> red_area, cylinder -> red_area",infeasible,false_reject,False,the instruction asks to move all objects but does not specify a single object to move in this turn; it is not a move-an-object-to-a-region task for one object,,1.235
-3,X06,stress,multi_object,default,"Move the cylinder to the red area, then the box.","cylinder -> red_area, box -> red_area",cylinder -> red_area,wrong_plan,False,planned cylinder -> red_area,,1.125
-3,X07,stress,negation,default,"Don't move the box, move the stone to the red area.",stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,1.089
-3,X08,stress,negation,default,Do not move the box to the red area.,infeasible,infeasible,correct,True,"the instruction is a negative command (do not move), which is not a move-an-object-to-a-region task.",negated command: nothing should be planned,1.277
-3,X09,stress,negation,default,Move every object except the cylinder to the red area.,"box -> red_area, stone -> red_area",infeasible,false_reject,False,"the instruction asks to move multiple objects, but the robot can only move one object per command; it cannot execute 'move every object except the cylinder' in a single step.",,1.653
-3,X10,stress,ambiguous_reference,default,Move the round object to the red area.,infeasible,stone -> red_area,false_accept,False,planned stone -> red_area,both the stone (sphere) and cylinder (round from above) fit; should not guess,0.923
-3,X11,stress,ambiguous_reference,default,Move it to the red area.,infeasible,box -> red_area,false_accept,False,planned box -> red_area,no referent for 'it',1.627
-3,X12,stress,ambiguous_reference,default,Move the green box to the red area.,infeasible,infeasible,correct,True,"there is no green box; the green object is a cylinder, not a box","contradictory: the box is blue, the green object is a cylinder",1.104
-3,X13,stress,unsupported_placement,default,Move the box next to the red area.,infeasible,box -> red_area,false_accept,False,planned box -> red_area,PLACE puts objects inside the region; 'next to' cannot be executed,1.026
-3,X14,stress,unsupported_placement,default,Move the stone away from the red area.,infeasible,infeasible,correct,True,"the instruction asks to move the stone away from the red area, but no destination region is specified—only a direction (away), not a target location.",opposite of the only supported placement,0.831
-3,X15,stress,unsupported_placement,default,"Place the box in the red area, then stack the stone on top of it.",infeasible,box -> red_area,false_accept,False,planned box -> red_area,stacking is not a supported skill; a partial plan is not correct,0.972
-3,X16,stress,unsupported_placement,default,Move the cylinder to the red area and then bring it back.,infeasible,cylinder -> red_area,false_accept,False,planned cylinder -> red_area,no skill for returning an object to its start pose,1.214
-3,X17,stress,distractor,default,"The stone is too heavy, so move the cylinder to the red area instead.",cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,first object mentioned is not the one to move,0.828
-3,X18,stress,distractor,default,Leave the blue box where it is and put the grey stone in the red zone.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,,1.159
-3,X19,stress,speech_noise,default,move the books to the read area,box -> red_area,infeasible,false_reject,False,"no object named 'books' is present in the scene, and 'read area' is not a valid target (should be 'red area') but the main issue is missing object","speech-to-text errors: box -> books, red -> read",1.102
-3,X20,stress,speech_noise,default,put the rack in the red zone,stone -> red_area,infeasible,false_reject,False,no object named 'rack' is present in the scene,rock -> rack,0.721
-3,X21,stress,speech_noise,default,move the cilinder too the red aria,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,misspellings,0.807
-3,X22,stress,speech_noise,default,move the blue bocks to the red area,box -> red_area,box -> red_area,correct,True,planned box -> red_area,,1.166
-3,X23,stress,non_english,default,Bewege den blauen Würfel in den roten Bereich.,box -> red_area,box -> red_area,correct,True,planned box -> red_area,German,1.047
-3,X24,stress,non_english,default,Pon la piedra en el área roja.,stone -> red_area,stone -> red_area,correct,True,planned stone -> red_area,Spanish,0.751
-3,X25,stress,non_english,default,把绿色的圆柱放到红色区域。,cylinder -> red_area,cylinder -> red_area,correct,True,planned cylinder -> red_area,Chinese,1.507
-3,X26,stress,perception_error,stone_colour_misread,Move the stone to the red area.,stone -> red_area,infeasible,false_reject,False,"'stone' is not visible in the current scene (scene: blue square -> box, green circle -> cylinder, white sphere -> none, red circle -> red_area)",stone is physically present but Task 2 called it white; colour grounding cannot match it,1.082
-3,X27,stress,perception_error,target_colour_misread,Move the box to the red area.,box -> red_area,infeasible,false_reject,False,"there is no red area in the scene; the only target region is 'purple circle', which maps to none",red region reported as purple; colour grounding cannot match it,0.745
+1,S01,core,standard,default,Pick up the stone and place it in the red area.,stone -> red_area,stone -> red_area,correct,TRUE,planned stone -> red_area,,2.113
+1,S02,core,standard,default,Move the box to the red area.,box -> red_area,box -> red_area,correct,TRUE,planned box -> red_area,,1.023
+1,S03,core,standard,default,Take the cylinder and place it in the red area.,cylinder -> red_area,cylinder -> red_area,correct,TRUE,planned cylinder -> red_area,,0.886
+1,S04,core,standard,default,Grab the stone and put it in the red zone.,stone -> red_area,stone -> red_area,correct,TRUE,planned stone -> red_area,,0.847
+1,S05,core,standard,default,Place the box into the red area.,box -> red_area,box -> red_area,correct,TRUE,planned box -> red_area,,1.063
+1,S06,core,standard,default,Put the cylinder in the red area.,cylinder -> red_area,cylinder -> red_area,correct,TRUE,planned cylinder -> red_area,,0.714
+1,S07,core,standard,default,Move the stone to the red area.,stone -> red_area,stone -> red_area,correct,TRUE,planned stone -> red_area,,0.999
+1,P01,core,paraphrase,default,Could you move that rock to the red zone?,stone -> red_area,stone -> red_area,correct,TRUE,planned stone -> red_area,,1.03
+1,P02,core,paraphrase,default,Please pick up the nearby stone and place it on the red marker.,stone -> red_area,stone -> red_area,correct,TRUE,planned stone -> red_area,,0.82
+1,P03,core,paraphrase,default,Grab that cylinder and drop it in the red spot.,cylinder -> red_area,cylinder -> red_area,correct,TRUE,planned cylinder -> red_area,,0.958
+1,P04,core,paraphrase,default,Take the box over to the target area.,box -> red_area,box -> red_area,correct,TRUE,planned box -> red_area,,1.209
+1,P05,core,paraphrase,default,Find the stone and bring it to the red region.,stone -> red_area,stone -> red_area,correct,TRUE,planned stone -> red_area,,1.011
+1,P06,core,paraphrase,default,"I'd like the cube moved onto the red target, please.",box -> red_area,box -> red_area,correct,TRUE,planned box -> red_area,,0.94
+1,P07,core,paraphrase,default,Can you carry the block over to the red zone?,box -> red_area,box -> red_area,correct,TRUE,planned box -> red_area,,0.858
+1,P08,core,paraphrase,default,Relocate the pebble to the target region.,stone -> red_area,stone -> red_area,correct,TRUE,planned stone -> red_area,,1.274
+1,P09,core,paraphrase,default,Would you mind setting the green can down in the red area?,cylinder -> red_area,cylinder -> red_area,correct,TRUE,planned cylinder -> red_area,,0.837
+1,P10,core,paraphrase,default,Transfer the box onto the red spot.,box -> red_area,box -> red_area,correct,TRUE,planned box -> red_area,,0.843
+1,P11,core,paraphrase,default,robot bring the rock to the goal,stone -> red_area,stone -> red_area,correct,TRUE,planned stone -> red_area,"no punctuation, 'goal' as the target word",0.924
+1,P12,core,paraphrase,default,The cylinder needs to go in the red area.,cylinder -> red_area,cylinder -> red_area,correct,TRUE,planned cylinder -> red_area,declarative rather than imperative,0.942
+1,C01,core,colour_wording,default,move blue to red,box -> red_area,box -> red_area,correct,TRUE,planned box -> red_area,,0.924
+1,C02,core,colour_wording,default,move box to red circle,box -> red_area,box -> red_area,correct,TRUE,planned box -> red_area,,0.967
+1,C03,core,colour_wording,default,move blue square to red area,box -> red_area,box -> red_area,correct,TRUE,planned box -> red_area,,1.087
+1,C04,core,colour_wording,default,Put the green one in the red circle.,cylinder -> red_area,cylinder -> red_area,correct,TRUE,planned cylinder -> red_area,,1.086
+1,C05,core,colour_wording,default,Place the grey ball in the red area.,stone -> red_area,stone -> red_area,correct,TRUE,planned stone -> red_area,,0.87
+1,C06,core,colour_wording,default,move green to the target,cylinder -> red_area,cylinder -> red_area,correct,TRUE,planned cylinder -> red_area,,1.147
+1,C07,core,colour_wording,default,Put the blue thing on the red marker.,box -> red_area,box -> red_area,correct,TRUE,planned box -> red_area,,1.049
+1,C08,core,colour_wording,default,move the gray sphere to red,stone -> red_area,stone -> red_area,correct,TRUE,planned stone -> red_area,,0.85
+1,C09,core,colour_wording,default,Move the sphere to the target.,stone -> red_area,stone -> red_area,correct,TRUE,planned stone -> red_area,the stone is a sphere in scene.xml and Task 2 reports 'gray sphere',0.995
+1,A01,core,alt_scene,alt_wording,Move the box to the red area.,box -> red_area,box -> red_area,correct,TRUE,planned box -> red_area,,0.792
+1,A02,core,alt_scene,alt_wording,Put the rock in the red zone.,stone -> red_area,stone -> red_area,correct,TRUE,planned stone -> red_area,,0.983
+1,A03,core,alt_scene,alt_wording,Take the green cylinder to the target.,cylinder -> red_area,cylinder -> red_area,correct,TRUE,planned cylinder -> red_area,,0.742
+1,A04,core,alt_scene,alt_wording,move blue to red,box -> red_area,box -> red_area,correct,TRUE,planned box -> red_area,,0.868
+1,A05,core,alt_scene,target_as_object,Move the box to the red area.,box -> red_area,box -> red_area,correct,TRUE,planned box -> red_area,Task 2 listed the red region as an object,0.875
+1,A06,core,alt_scene,duplicate_detection,Move the box to the red area.,box -> red_area,box -> red_area,correct,TRUE,planned box -> red_area,Task 2 reported the cube twice,0.696
+1,U01,core,unknown_object,default,Pick up the banana and place it in the red area.,infeasible,infeasible,correct,TRUE,there is no banana in the scene,,0.672
+1,U02,core,unknown_object,default,Pick up the laptop and put it in the red zone.,infeasible,infeasible,correct,TRUE,no laptop is present in the scene,,1.576
+1,U03,core,unknown_object,default,Grab the chair and place it in the red area.,infeasible,infeasible,correct,TRUE,there is no object named 'chair' in the scene,,0.855
+1,U04,core,unknown_object,default,Move the pyramid to the target.,infeasible,infeasible,correct,TRUE,no pyramid is in the scene,,0.699
+1,U05,core,unknown_object,default,Move the apple to the red area.,infeasible,infeasible,correct,TRUE,there is no object named 'apple' in the scene,,1.091
+1,U06,core,unknown_object,default,Put the red ball in the red area.,infeasible,infeasible,correct,TRUE,there is no red ball in the scene; the only ball is the gray stone,no red object exists; the only red thing is the target region,1.027
+1,D01,core,bad_destination,default,Grab the stone and place it in the green zone.,infeasible,infeasible,correct,TRUE,there is no green target region; the only target is red_area,,0.998
+1,D02,core,bad_destination,default,Put the cylinder in the yellow area.,infeasible,infeasible,correct,TRUE,there is no yellow target region; the only target region is red_area,,0.778
+1,D03,core,bad_destination,default,Put the stone on the moon.,infeasible,infeasible,correct,TRUE,there is no target region named 'moon'; the only target is red_area,,0.926
+1,D04,core,bad_destination,default,Move the box to the blue area.,infeasible,infeasible,correct,TRUE,there is no blue target region in the scene; only the red_area exists,,1.265
+1,D05,core,bad_destination,default,Put the box on the table.,infeasible,infeasible,correct,TRUE,the table is not a named target region; only red_area is recognized as a valid target,the table is not a target region,1.09
+1,D06,core,bad_destination,default,Place the cylinder on the robot's base.,infeasible,infeasible,correct,TRUE,the robot's base is not a defined target region; only red_area is recognized as a target,,1.198
+1,N01,core,no_destination,default,Pick up the cylinder.,infeasible,infeasible,correct,TRUE,"no destination was given; the instruction only says to pick up, not move to a region",,0.821
+1,N02,core,no_destination,default,Grab the rock.,infeasible,infeasible,correct,TRUE,"no destination was given; the instruction only says to grab, not move to a region",,0.669
+1,N03,core,no_destination,default,Lift the blue box.,infeasible,infeasible,correct,TRUE,"no destination was given; the instruction only says to lift, not move to a region",,1.547
+1,N04,core,no_destination,default,Hold the cylinder.,infeasible,infeasible,correct,TRUE,"no destination was given; the instruction only asks to hold the object, not move it to a region",,0.704
+1,M01,core,not_manipulation,default,Move the robot to Mars.,infeasible,infeasible,correct,TRUE,"the instruction asks to move the robot itself, not an object in the scene, and Mars is not a present target region",,0.77
+1,M02,core,not_manipulation,default,Fly the drone to the red area.,infeasible,infeasible,correct,TRUE,the drone is not an object in the scene that the robot can move,,0.99
+1,M03,core,not_manipulation,default,Delete the box.,infeasible,infeasible,correct,TRUE,"the instruction asks to delete, not move to a target region",,1.077
+1,M04,core,not_manipulation,default,What colour is the box?,infeasible,infeasible,correct,TRUE,"the instruction is a question about colour, not a move-an-object-to-a-region task",,0.656
+1,M05,core,not_manipulation,default,Dance.,infeasible,infeasible,correct,TRUE,the instruction 'Dance' is not a move-an-object-to-a-region task,,1.087
+1,M06,core,not_manipulation,default,Paint the box red.,infeasible,infeasible,correct,TRUE,"the instruction asks to paint, not move; no painting action or tool is available, and no destination region is specified for a move operation",,0.818
+1,M07,core,not_manipulation,default,Move the red area to the box.,infeasible,infeasible,correct,TRUE,"the red area is a target region, not an object that can be moved; the instruction asks to move a region, which is not feasible",the target region is painted on the table and cannot be moved,0.941
+1,V01,core,not_in_scene,no_cylinder,Move the cylinder to the red area.,infeasible,infeasible,correct,TRUE,"'cylinder' is not visible in the current scene (scene: blue square -> box, gray sphere -> stone, red circle -> red_area)",,0.752
+1,V02,core,not_in_scene,no_target,Move the box to the red area.,infeasible,infeasible,correct,TRUE,no target region named 'red area' is detected in the scene,,1.081
+1,V03,core,not_in_scene,no_cylinder,Put the green one in the red zone.,infeasible,infeasible,correct,TRUE,"'cylinder' is not visible in the current scene (scene: blue square -> box, gray sphere -> stone, red circle -> red_area)",,1.097
+1,V04,core,not_in_scene,empty,Move the stone to the red area.,infeasible,infeasible,correct,TRUE,no stone is present in the current scene,,0.722
+1,X01,stress,spatial_reference,default,Move the object closest to the robot base to the red area.,cylinder -> red_area,box -> red_area,wrong_plan,FALSE,planned box -> red_area,cylinder is nearest (0.31 m vs 0.33 m); the scene description has no positions,0.974
+1,X02,stress,spatial_reference,default,Move the object furthest from the red area into it.,stone -> red_area,infeasible,false_reject,FALSE,"'the object furthest from the red area' is red, but the only matching object (stone) is gray",stone is furthest (0.38 m); needs position information the planner does not get,1.137
+1,X03,stress,spatial_reference,default,Move the object between the stone and the cylinder to the red area.,box -> red_area,infeasible,false_reject,FALSE,"'the object between the stone and the cylinder' names the cylinder, not the box",box lies between them along y; needs spatial layout,1.155
+1,X04,stress,multi_object,default,Move the box and the stone to the red area.,"box -> red_area, stone -> red_area",box -> red_area,wrong_plan,FALSE,planned box -> red_area,robot can do this as two sequential moves; planner only supports one object,1.581
+1,X05,stress,multi_object,default,Put everything in the red area.,"box -> red_area, stone -> red_area, cylinder -> red_area",infeasible,false_reject,FALSE,"the instruction asks to move all objects, but the robot can only move one object per turn; it is not a single-object-to-target task",,1.092
+1,X06,stress,multi_object,default,"Move the cylinder to the red area, then the box.","cylinder -> red_area, box -> red_area",cylinder -> red_area,wrong_plan,FALSE,planned cylinder -> red_area,,0.828
+1,X07,stress,negation,default,"Don't move the box, move the stone to the red area.",stone -> red_area,stone -> red_area,correct,TRUE,planned stone -> red_area,,1.24
+1,X08,stress,negation,default,Do not move the box to the red area.,infeasible,infeasible,correct,TRUE,"the instruction is a negative command (do not move), which is not a move-an-object-to-a-region task.",negated command: nothing should be planned,0.913
+1,X09,stress,negation,default,Move every object except the cylinder to the red area.,"box -> red_area, stone -> red_area",infeasible,false_reject,FALSE,"the instruction asks to move multiple objects, but the robot can only move one object per command; it cannot execute 'every object except the cylinder' in a single move.",,1.818
+1,X10,stress,ambiguous_reference,default,Move the round object to the red area.,infeasible,stone -> red_area,false_accept,FALSE,planned stone -> red_area,both the stone (sphere) and cylinder (round from above) fit; should not guess,0.934
+1,X11,stress,ambiguous_reference,default,Move it to the red area.,infeasible,box -> red_area,false_accept,FALSE,planned box -> red_area,no referent for 'it',1.658
+1,X12,stress,ambiguous_reference,default,Move the green box to the red area.,infeasible,infeasible,correct,TRUE,"there is no green box; the green object is a cylinder, not a box","contradictory: the box is blue, the green object is a cylinder",0.852
+1,X13,stress,unsupported_placement,default,Move the box next to the red area.,infeasible,box -> red_area,false_accept,FALSE,planned box -> red_area,PLACE puts objects inside the region; 'next to' cannot be executed,1.172
+1,X14,stress,unsupported_placement,default,Move the stone away from the red area.,infeasible,infeasible,correct,TRUE,"the instruction does not specify a destination for the stone, only to move it away from the red area, which is not a valid target region for a move-to operation.",opposite of the only supported placement,1.547
+1,X15,stress,unsupported_placement,default,"Place the box in the red area, then stack the stone on top of it.",infeasible,box -> red_area,false_accept,FALSE,planned box -> red_area,stacking is not a supported skill; a partial plan is not correct,0.805
+1,X16,stress,unsupported_placement,default,Move the cylinder to the red area and then bring it back.,infeasible,cylinder -> red_area,false_accept,FALSE,planned cylinder -> red_area,no skill for returning an object to its start pose,0.786
+1,X17,stress,distractor,default,"The stone is too heavy, so move the cylinder to the red area instead.",cylinder -> red_area,cylinder -> red_area,correct,TRUE,planned cylinder -> red_area,first object mentioned is not the one to move,1.059
+1,X18,stress,distractor,default,Leave the blue box where it is and put the grey stone in the red zone.,stone -> red_area,stone -> red_area,correct,TRUE,planned stone -> red_area,,0.934
+1,X19,stress,speech_noise,default,move the books to the read area,box -> red_area,infeasible,false_reject,FALSE,"no object named 'books' is present in the scene, and 'read area' is not a valid target (should be 'red area')}","speech-to-text errors: box -> books, red -> read",0.922
+1,X20,stress,speech_noise,default,put the rack in the red zone,stone -> red_area,infeasible,false_reject,FALSE,no object named 'rack' is present in the scene,rock -> rack,0.817
+1,X21,stress,speech_noise,default,move the cilinder too the red aria,cylinder -> red_area,cylinder -> red_area,correct,TRUE,planned cylinder -> red_area,misspellings,1.248
+1,X22,stress,speech_noise,default,move the blue bocks to the red area,box -> red_area,box -> red_area,correct,TRUE,planned box -> red_area,,1.232
+1,X23,stress,non_english,default,Bewege den blauen Würfel in den roten Bereich.,box -> red_area,box -> red_area,correct,TRUE,planned box -> red_area,German,1.312
+1,X24,stress,non_english,default,Pon la piedra en el área roja.,stone -> red_area,stone -> red_area,correct,TRUE,planned stone -> red_area,Spanish,0.736
+1,X25,stress,non_english,default,把绿色的圆柱放到红色区域。,cylinder -> red_area,cylinder -> red_area,correct,TRUE,planned cylinder -> red_area,Chinese,1.53
+1,X26,stress,perception_error,stone_colour_misread,Move the stone to the red area.,stone -> red_area,infeasible,false_reject,FALSE,"'stone' is not visible in the current scene (scene: blue square -> box, green circle -> cylinder, white sphere -> none, red circle -> red_area)",stone is physically present but Task 2 called it white; colour grounding cannot match it,0.89
+1,X27,stress,perception_error,target_colour_misread,Move the box to the red area.,box -> red_area,infeasible,false_reject,FALSE,"there is no red area in the scene; only a purple circle is present, and no target region named 'red area' exists",red region reported as purple; colour grounding cannot match it,1.287
