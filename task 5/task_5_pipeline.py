@@ -316,12 +316,6 @@ def get_instruction():
 
 if __name__ == "__main__":
 
-    instruction = (
-        sys.argv[1]
-        if len(sys.argv) > 1
-        else get_instruction()
-    )
-
   # ------------------------------------------------------
     # CREATE TASK 4 EXECUTOR ONCE
     # ------------------------------------------------------
