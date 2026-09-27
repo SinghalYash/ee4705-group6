@@ -1,0 +1,2754 @@
+{
+  "summary": {
+    "timestamp": "2026-09-27T18:09:18",
+    "model": "qwen3-vl-flash",
+    "cases": 35,
+    "trials_per_case": 1,
+    "V4": {
+      "runs": 35,
+      "action_planning_accuracy": 0.5143,
+      "valid_request_accuracy": 0.2105,
+      "invalid_request_rejection_rate": 0.875,
+      "per_category_accuracy": {
+        "standard": 0.0,
+        "paraphrase": 0.0,
+        "colour_wording": 0.2,
+        "alt_scene": 1.0,
+        "unknown_object": 1.0,
+        "bad_destination": 1.0,
+        "no_destination": 0.0,
+        "not_manipulation": 1.0,
+        "not_in_scene": 1.0
+      },
+      "outcome_counts": {
+        "malformed": 13,
+        "false_reject": 2,
+        "correct": 18,
+        "false_accept": 2
+      },
+      "mean_llm_calls_per_instruction": 1,
+      "mean_prompt_tokens_per_instruction": 1423.6,
+      "mean_completion_tokens_per_instruction": 137.5,
+      "total_prompt_tokens": 49825,
+      "total_completion_tokens": 4812,
+      "mean_latency_s": 1.512,
+      "median_latency_s": 1.367,
+      "p95_latency_s": 2.125
+    },
+    "V5": {
+      "runs": 35,
+      "action_planning_accuracy": 1.0,
+      "valid_request_accuracy": 1.0,
+      "invalid_request_rejection_rate": 1.0,
+      "per_category_accuracy": {
+        "standard": 1.0,
+        "paraphrase": 1.0,
+        "colour_wording": 1.0,
+        "alt_scene": 1.0,
+        "unknown_object": 1.0,
+        "bad_destination": 1.0,
+        "no_destination": 1.0,
+        "not_manipulation": 1.0,
+        "not_in_scene": 1.0
+      },
+      "outcome_counts": {
+        "correct": 35
+      },
+      "mean_llm_calls_per_instruction": 1,
+      "mean_prompt_tokens_per_instruction": 955.2,
+      "mean_completion_tokens_per_instruction": 62.8,
+      "total_prompt_tokens": 33431,
+      "total_completion_tokens": 2197,
+      "mean_latency_s": 0.791,
+      "median_latency_s": 0.772,
+      "p95_latency_s": 0.985
+    },
+    "cases_with_different_results": [
+      {
+        "id": "S01",
+        "instruction": "Pick up the stone and place it in the red area.",
+        "expected": "stone -> red_area",
+        "V4_correct": "0/1",
+        "V4_first": "malformed: Action 5 has invalid destination: red_circle",
+        "V5_correct": "1/1",
+        "V5_first": "correct: planned stone -> red_area"
+      },
+      {
+        "id": "S02",
+        "instruction": "Move the box to the red area.",
+        "expected": "box -> red_area",
+        "V4_correct": "0/1",
+        "V4_first": "malformed: Action 5 has invalid destination: red_circle",
+        "V5_correct": "1/1",
+        "V5_first": "correct: planned box -> red_area"
+      },
+      {
+        "id": "S03",
+        "instruction": "Take the cylinder and place it in the red area.",
+        "expected": "cylinder -> red_area",
+        "V4_correct": "0/1",
+        "V4_first": "false_reject: There is no object named 'cylinder' in the scene. The green circle is the only green object, which according to the color rule maps to 'cylinder', but the instruction says 'the cylinder' implying a specific instance; however, the green circle is present and may be intended as the cylinder. But note: the user says 'Take the cylinder', and the scene has 'green circle'. Since green objects map to 'cylinder', this should be acceptable. Let's re-evaluate: 'green circle' → 'cylinder' per color rule (any green object = cylinder). So there is a cylinder (green circle). Target region 'red circle' matches 'red_area' per rule. So it should be feasible. Correction: The plan should use 'green circle' as 'cylinder'.",
+        "V5_correct": "1/1",
+        "V5_first": "correct: planned cylinder -> red_area"
+      },
+      {
+        "id": "S04",
+        "instruction": "Grab the stone and put it in the red zone.",
+        "expected": "stone -> red_area",
+        "V4_correct": "0/1",
+        "V4_first": "malformed: Action 5 has invalid destination: red_circle",
+        "V5_correct": "1/1",
+        "V5_first": "correct: planned stone -> red_area"
+      },
+      {
+        "id": "S05",
+        "instruction": "Place the box into the red area.",
+        "expected": "box -> red_area",
+        "V4_correct": "0/1",
+        "V4_first": "malformed: Action 5 has invalid destination: red_circle",
+        "V5_correct": "1/1",
+        "V5_first": "correct: planned box -> red_area"
+      },
+      {
+        "id": "P01",
+        "instruction": "Could you move that rock to the red zone?",
+        "expected": "stone -> red_area",
+        "V4_correct": "0/1",
+        "V4_first": "malformed: Action 5 has invalid destination: red_circle",
+        "V5_correct": "1/1",
+        "V5_first": "correct: planned stone -> red_area"
+      },
+      {
+        "id": "P02",
+        "instruction": "Please pick up the nearby stone and place it on the red marker.",
+        "expected": "stone -> red_area",
+        "V4_correct": "0/1",
+        "V4_first": "malformed: Action 5 has invalid destination: red_circle",
+        "V5_correct": "1/1",
+        "V5_first": "correct: planned stone -> red_area"
+      },
+      {
+        "id": "P03",
+        "instruction": "Grab that cylinder and drop it in the red spot.",
+        "expected": "cylinder -> red_area",
+        "V4_correct": "0/1",
+        "V4_first": "false_reject: Could not parse planner output",
+        "V5_correct": "1/1",
+        "V5_first": "correct: planned cylinder -> red_area"
+      },
+      {
+        "id": "P04",
+        "instruction": "Take the box over to the target area.",
+        "expected": "box -> red_area",
+        "V4_correct": "0/1",
+        "V4_first": "malformed: Action 5 has invalid destination: red_circle",
+        "V5_correct": "1/1",
+        "V5_first": "correct: planned box -> red_area"
+      },
+      {
+        "id": "P05",
+        "instruction": "Find the stone and bring it to the red region.",
+        "expected": "stone -> red_area",
+        "V4_correct": "0/1",
+        "V4_first": "malformed: Action 5 has invalid destination: red_circle",
+        "V5_correct": "1/1",
+        "V5_first": "correct: planned stone -> red_area"
+      },
+      {
+        "id": "P06",
+        "instruction": "I'd like the cube moved onto the red target, please.",
+        "expected": "box -> red_area",
+        "V4_correct": "0/1",
+        "V4_first": "malformed: Action 5 has invalid destination: red_circle",
+        "V5_correct": "1/1",
+        "V5_first": "correct: planned box -> red_area"
+      },
+      {
+        "id": "C01",
+        "instruction": "move blue to red",
+        "expected": "box -> red_area",
+        "V4_correct": "0/1",
+        "V4_first": "malformed: Action 5 has invalid destination: red_circle",
+        "V5_correct": "1/1",
+        "V5_first": "correct: planned box -> red_area"
+      },
+      {
+        "id": "C02",
+        "instruction": "move box to red circle",
+        "expected": "box -> red_area",
+        "V4_correct": "0/1",
+        "V4_first": "malformed: Action 5 has invalid destination: red_circle",
+        "V5_correct": "1/1",
+        "V5_first": "correct: planned box -> red_area"
+      },
+      {
+        "id": "C04",
+        "instruction": "Put the green one in the red circle.",
+        "expected": "cylinder -> red_area",
+        "V4_correct": "0/1",
+        "V4_first": "malformed: Action 5 has invalid destination: red_circle",
+        "V5_correct": "1/1",
+        "V5_first": "correct: planned cylinder -> red_area"
+      },
+      {
+        "id": "C05",
+        "instruction": "Place the grey ball in the red area.",
+        "expected": "stone -> red_area",
+        "V4_correct": "0/1",
+        "V4_first": "malformed: Action 5 has invalid destination: red_circle",
+        "V5_correct": "1/1",
+        "V5_first": "correct: planned stone -> red_area"
+      },
+      {
+        "id": "N01",
+        "instruction": "Pick up the cylinder.",
+        "expected": "infeasible",
+        "V4_correct": "0/1",
+        "V4_first": "false_accept: unexpected skill sequence ['SEARCH', 'APPROACH', 'REACH', 'GRASP']",
+        "V5_correct": "1/1",
+        "V5_first": "correct: no destination was given; the instruction only says to pick up, not move to a region"
+      },
+      {
+        "id": "N02",
+        "instruction": "Grab the rock.",
+        "expected": "infeasible",
+        "V4_correct": "0/1",
+        "V4_first": "false_accept: unexpected skill sequence ['SEARCH', 'APPROACH', 'REACH', 'GRASP']",
+        "V5_correct": "1/1",
+        "V5_first": "correct: no destination was given; the instruction only says to grab, not move to a region"
+      }
+    ]
+  },
+  "runs": [
+    {
+      "version": "V4",
+      "id": "S01",
+      "category": "standard",
+      "instruction": "Pick up the stone and place it in the red area.",
+      "expected": "stone -> red_area",
+      "got": "error",
+      "outcome": "malformed",
+      "correct": false,
+      "detail": "Action 5 has invalid destination: red_circle",
+      "llm_calls": 1,
+      "prompt_tokens": 1427,
+      "completion_tokens": 139,
+      "latency_s": 1.707,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "stone"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "stone"
+          },
+          {
+            "skill": "REACH",
+            "target": "stone"
+          },
+          {
+            "skill": "GRASP",
+            "target": "stone"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_circle"
+          },
+          {
+            "skill": "PLACE",
+            "object": "stone",
+            "target": "red_circle"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "S01",
+      "category": "standard",
+      "instruction": "Pick up the stone and place it in the red area.",
+      "expected": "stone -> red_area",
+      "got": "stone -> red_area",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "planned stone -> red_area",
+      "llm_calls": 1,
+      "prompt_tokens": 959,
+      "completion_tokens": 63,
+      "latency_s": 0.914,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "stone"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "stone"
+          },
+          {
+            "skill": "REACH",
+            "target": "stone"
+          },
+          {
+            "skill": "GRASP",
+            "target": "stone"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_area"
+          },
+          {
+            "skill": "PLACE",
+            "object": "stone",
+            "target": "red_area"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "S02",
+      "category": "standard",
+      "instruction": "Move the box to the red area.",
+      "expected": "box -> red_area",
+      "got": "error",
+      "outcome": "malformed",
+      "correct": false,
+      "detail": "Action 5 has invalid destination: red_circle",
+      "llm_calls": 1,
+      "prompt_tokens": 1423,
+      "completion_tokens": 139,
+      "latency_s": 1.753,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "box"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "box"
+          },
+          {
+            "skill": "REACH",
+            "target": "box"
+          },
+          {
+            "skill": "GRASP",
+            "target": "box"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_circle"
+          },
+          {
+            "skill": "PLACE",
+            "object": "box",
+            "target": "red_circle"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "S02",
+      "category": "standard",
+      "instruction": "Move the box to the red area.",
+      "expected": "box -> red_area",
+      "got": "box -> red_area",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "planned box -> red_area",
+      "llm_calls": 1,
+      "prompt_tokens": 955,
+      "completion_tokens": 63,
+      "latency_s": 0.676,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "box"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "box"
+          },
+          {
+            "skill": "REACH",
+            "target": "box"
+          },
+          {
+            "skill": "GRASP",
+            "target": "box"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_area"
+          },
+          {
+            "skill": "PLACE",
+            "object": "box",
+            "target": "red_area"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "S03",
+      "category": "standard",
+      "instruction": "Take the cylinder and place it in the red area.",
+      "expected": "cylinder -> red_area",
+      "got": "infeasible",
+      "outcome": "false_reject",
+      "correct": false,
+      "detail": "There is no object named 'cylinder' in the scene. The green circle is the only green object, which according to the color rule maps to 'cylinder', but the instruction says 'the cylinder' implying a specific instance; however, the green circle is present and may be intended as the cylinder. But note: the user says 'Take the cylinder', and the scene has 'green circle'. Since green objects map to 'cylinder', this should be acceptable. Let's re-evaluate: 'green circle' → 'cylinder' per color rule (any green object = cylinder). So there is a cylinder (green circle). Target region 'red circle' matches 'red_area' per rule. So it should be feasible. Correction: The plan should use 'green circle' as 'cylinder'.",
+      "llm_calls": 1,
+      "prompt_tokens": 1426,
+      "completion_tokens": 198,
+      "latency_s": 2.125,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "There is no object named 'cylinder' in the scene. The green circle is the only green object, which according to the color rule maps to 'cylinder', but the instruction says 'the cylinder' implying a specific instance; however, the green circle is present and may be intended as the cylinder. But note: the user says 'Take the cylinder', and the scene has 'green circle'. Since green objects map to 'cylinder', this should be acceptable. Let's re-evaluate: 'green circle' → 'cylinder' per color rule (any green object = cylinder). So there is a cylinder (green circle). Target region 'red circle' matches 'red_area' per rule. So it should be feasible. Correction: The plan should use 'green circle' as 'cylinder'."
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "S03",
+      "category": "standard",
+      "instruction": "Take the cylinder and place it in the red area.",
+      "expected": "cylinder -> red_area",
+      "got": "cylinder -> red_area",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "planned cylinder -> red_area",
+      "llm_calls": 1,
+      "prompt_tokens": 958,
+      "completion_tokens": 66,
+      "latency_s": 0.714,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "cylinder"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "cylinder"
+          },
+          {
+            "skill": "REACH",
+            "target": "cylinder"
+          },
+          {
+            "skill": "GRASP",
+            "target": "cylinder"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_area"
+          },
+          {
+            "skill": "PLACE",
+            "object": "cylinder",
+            "target": "red_area"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "S04",
+      "category": "standard",
+      "instruction": "Grab the stone and put it in the red zone.",
+      "expected": "stone -> red_area",
+      "got": "error",
+      "outcome": "malformed",
+      "correct": false,
+      "detail": "Action 5 has invalid destination: red_circle",
+      "llm_calls": 1,
+      "prompt_tokens": 1426,
+      "completion_tokens": 139,
+      "latency_s": 1.393,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "stone"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "stone"
+          },
+          {
+            "skill": "REACH",
+            "target": "stone"
+          },
+          {
+            "skill": "GRASP",
+            "target": "stone"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_circle"
+          },
+          {
+            "skill": "PLACE",
+            "object": "stone",
+            "target": "red_circle"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "S04",
+      "category": "standard",
+      "instruction": "Grab the stone and put it in the red zone.",
+      "expected": "stone -> red_area",
+      "got": "stone -> red_area",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "planned stone -> red_area",
+      "llm_calls": 1,
+      "prompt_tokens": 958,
+      "completion_tokens": 60,
+      "latency_s": 1.178,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "stone"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "stone"
+          },
+          {
+            "skill": "REACH",
+            "target": "stone"
+          },
+          {
+            "skill": "GRASP",
+            "target": "stone"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_area"
+          },
+          {
+            "skill": "PLACE",
+            "object": "stone",
+            "target": "red_area"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "S05",
+      "category": "standard",
+      "instruction": "Place the box into the red area.",
+      "expected": "box -> red_area",
+      "got": "error",
+      "outcome": "malformed",
+      "correct": false,
+      "detail": "Action 5 has invalid destination: red_circle",
+      "llm_calls": 1,
+      "prompt_tokens": 1423,
+      "completion_tokens": 139,
+      "latency_s": 1.511,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "box"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "box"
+          },
+          {
+            "skill": "REACH",
+            "target": "box"
+          },
+          {
+            "skill": "GRASP",
+            "target": "box"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_circle"
+          },
+          {
+            "skill": "PLACE",
+            "object": "box",
+            "target": "red_circle"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "S05",
+      "category": "standard",
+      "instruction": "Place the box into the red area.",
+      "expected": "box -> red_area",
+      "got": "box -> red_area",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "planned box -> red_area",
+      "llm_calls": 1,
+      "prompt_tokens": 955,
+      "completion_tokens": 63,
+      "latency_s": 0.851,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "box"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "box"
+          },
+          {
+            "skill": "REACH",
+            "target": "box"
+          },
+          {
+            "skill": "GRASP",
+            "target": "box"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_area"
+          },
+          {
+            "skill": "PLACE",
+            "object": "box",
+            "target": "red_area"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "P01",
+      "category": "paraphrase",
+      "instruction": "Could you move that rock to the red zone?",
+      "expected": "stone -> red_area",
+      "got": "error",
+      "outcome": "malformed",
+      "correct": false,
+      "detail": "Action 5 has invalid destination: red_circle",
+      "llm_calls": 1,
+      "prompt_tokens": 1425,
+      "completion_tokens": 139,
+      "latency_s": 1.549,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "stone"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "stone"
+          },
+          {
+            "skill": "REACH",
+            "target": "stone"
+          },
+          {
+            "skill": "GRASP",
+            "target": "stone"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_circle"
+          },
+          {
+            "skill": "PLACE",
+            "object": "stone",
+            "target": "red_circle"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "P01",
+      "category": "paraphrase",
+      "instruction": "Could you move that rock to the red zone?",
+      "expected": "stone -> red_area",
+      "got": "stone -> red_area",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "planned stone -> red_area",
+      "llm_calls": 1,
+      "prompt_tokens": 957,
+      "completion_tokens": 62,
+      "latency_s": 0.843,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "stone"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "stone"
+          },
+          {
+            "skill": "REACH",
+            "target": "stone"
+          },
+          {
+            "skill": "GRASP",
+            "target": "stone"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_area"
+          },
+          {
+            "skill": "PLACE",
+            "object": "stone",
+            "target": "red_area"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "P02",
+      "category": "paraphrase",
+      "instruction": "Please pick up the nearby stone and place it on the red marker.",
+      "expected": "stone -> red_area",
+      "got": "error",
+      "outcome": "malformed",
+      "correct": false,
+      "detail": "Action 5 has invalid destination: red_circle",
+      "llm_calls": 1,
+      "prompt_tokens": 1429,
+      "completion_tokens": 139,
+      "latency_s": 1.884,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "stone"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "stone"
+          },
+          {
+            "skill": "REACH",
+            "target": "stone"
+          },
+          {
+            "skill": "GRASP",
+            "target": "stone"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_circle"
+          },
+          {
+            "skill": "PLACE",
+            "object": "stone",
+            "target": "red_circle"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "P02",
+      "category": "paraphrase",
+      "instruction": "Please pick up the nearby stone and place it on the red marker.",
+      "expected": "stone -> red_area",
+      "got": "stone -> red_area",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "planned stone -> red_area",
+      "llm_calls": 1,
+      "prompt_tokens": 961,
+      "completion_tokens": 69,
+      "latency_s": 1.224,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "stone"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "stone"
+          },
+          {
+            "skill": "REACH",
+            "target": "stone"
+          },
+          {
+            "skill": "GRASP",
+            "target": "stone"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_area"
+          },
+          {
+            "skill": "PLACE",
+            "object": "stone",
+            "target": "red_area"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "P03",
+      "category": "paraphrase",
+      "instruction": "Grab that cylinder and drop it in the red spot.",
+      "expected": "cylinder -> red_area",
+      "got": "infeasible",
+      "outcome": "false_reject",
+      "correct": false,
+      "detail": "Could not parse planner output",
+      "llm_calls": 1,
+      "prompt_tokens": 1426,
+      "completion_tokens": 916,
+      "latency_s": 8.774,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "Could not parse planner output"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "P03",
+      "category": "paraphrase",
+      "instruction": "Grab that cylinder and drop it in the red spot.",
+      "expected": "cylinder -> red_area",
+      "got": "cylinder -> red_area",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "planned cylinder -> red_area",
+      "llm_calls": 1,
+      "prompt_tokens": 958,
+      "completion_tokens": 77,
+      "latency_s": 0.811,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "cylinder"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "cylinder"
+          },
+          {
+            "skill": "REACH",
+            "target": "cylinder"
+          },
+          {
+            "skill": "GRASP",
+            "target": "cylinder"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_area"
+          },
+          {
+            "skill": "PLACE",
+            "object": "cylinder",
+            "target": "red_area"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "P04",
+      "category": "paraphrase",
+      "instruction": "Take the box over to the target area.",
+      "expected": "box -> red_area",
+      "got": "error",
+      "outcome": "malformed",
+      "correct": false,
+      "detail": "Action 5 has invalid destination: red_circle",
+      "llm_calls": 1,
+      "prompt_tokens": 1424,
+      "completion_tokens": 139,
+      "latency_s": 1.38,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "box"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "box"
+          },
+          {
+            "skill": "REACH",
+            "target": "box"
+          },
+          {
+            "skill": "GRASP",
+            "target": "box"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_circle"
+          },
+          {
+            "skill": "PLACE",
+            "object": "box",
+            "target": "red_circle"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "P04",
+      "category": "paraphrase",
+      "instruction": "Take the box over to the target area.",
+      "expected": "box -> red_area",
+      "got": "box -> red_area",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "planned box -> red_area",
+      "llm_calls": 1,
+      "prompt_tokens": 956,
+      "completion_tokens": 65,
+      "latency_s": 0.684,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "box"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "box"
+          },
+          {
+            "skill": "REACH",
+            "target": "box"
+          },
+          {
+            "skill": "GRASP",
+            "target": "box"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_area"
+          },
+          {
+            "skill": "PLACE",
+            "object": "box",
+            "target": "red_area"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "P05",
+      "category": "paraphrase",
+      "instruction": "Find the stone and bring it to the red region.",
+      "expected": "stone -> red_area",
+      "got": "error",
+      "outcome": "malformed",
+      "correct": false,
+      "detail": "Action 5 has invalid destination: red_circle",
+      "llm_calls": 1,
+      "prompt_tokens": 1426,
+      "completion_tokens": 139,
+      "latency_s": 1.239,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "stone"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "stone"
+          },
+          {
+            "skill": "REACH",
+            "target": "stone"
+          },
+          {
+            "skill": "GRASP",
+            "target": "stone"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_circle"
+          },
+          {
+            "skill": "PLACE",
+            "object": "stone",
+            "target": "red_circle"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "P05",
+      "category": "paraphrase",
+      "instruction": "Find the stone and bring it to the red region.",
+      "expected": "stone -> red_area",
+      "got": "stone -> red_area",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "planned stone -> red_area",
+      "llm_calls": 1,
+      "prompt_tokens": 958,
+      "completion_tokens": 63,
+      "latency_s": 0.798,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "stone"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "stone"
+          },
+          {
+            "skill": "REACH",
+            "target": "stone"
+          },
+          {
+            "skill": "GRASP",
+            "target": "stone"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_area"
+          },
+          {
+            "skill": "PLACE",
+            "object": "stone",
+            "target": "red_area"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "P06",
+      "category": "paraphrase",
+      "instruction": "I'd like the cube moved onto the red target, please.",
+      "expected": "box -> red_area",
+      "got": "error",
+      "outcome": "malformed",
+      "correct": false,
+      "detail": "Action 5 has invalid destination: red_circle",
+      "llm_calls": 1,
+      "prompt_tokens": 1427,
+      "completion_tokens": 139,
+      "latency_s": 1.448,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "box"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "box"
+          },
+          {
+            "skill": "REACH",
+            "target": "box"
+          },
+          {
+            "skill": "GRASP",
+            "target": "box"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_circle"
+          },
+          {
+            "skill": "PLACE",
+            "object": "box",
+            "target": "red_circle"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "P06",
+      "category": "paraphrase",
+      "instruction": "I'd like the cube moved onto the red target, please.",
+      "expected": "box -> red_area",
+      "got": "box -> red_area",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "planned box -> red_area",
+      "llm_calls": 1,
+      "prompt_tokens": 960,
+      "completion_tokens": 61,
+      "latency_s": 0.747,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "box"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "box"
+          },
+          {
+            "skill": "REACH",
+            "target": "box"
+          },
+          {
+            "skill": "GRASP",
+            "target": "box"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_area"
+          },
+          {
+            "skill": "PLACE",
+            "object": "box",
+            "target": "red_area"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "C01",
+      "category": "colour_wording",
+      "instruction": "move blue to red",
+      "expected": "box -> red_area",
+      "got": "error",
+      "outcome": "malformed",
+      "correct": false,
+      "detail": "Action 5 has invalid destination: red_circle",
+      "llm_calls": 1,
+      "prompt_tokens": 1420,
+      "completion_tokens": 139,
+      "latency_s": 1.193,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "box"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "box"
+          },
+          {
+            "skill": "REACH",
+            "target": "box"
+          },
+          {
+            "skill": "GRASP",
+            "target": "box"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_circle"
+          },
+          {
+            "skill": "PLACE",
+            "object": "box",
+            "target": "red_circle"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "C01",
+      "category": "colour_wording",
+      "instruction": "move blue to red",
+      "expected": "box -> red_area",
+      "got": "box -> red_area",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "planned box -> red_area",
+      "llm_calls": 1,
+      "prompt_tokens": 951,
+      "completion_tokens": 58,
+      "latency_s": 0.82,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "box"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "box"
+          },
+          {
+            "skill": "REACH",
+            "target": "box"
+          },
+          {
+            "skill": "GRASP",
+            "target": "box"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_area"
+          },
+          {
+            "skill": "PLACE",
+            "object": "box",
+            "target": "red_area"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "C02",
+      "category": "colour_wording",
+      "instruction": "move box to red circle",
+      "expected": "box -> red_area",
+      "got": "error",
+      "outcome": "malformed",
+      "correct": false,
+      "detail": "Action 5 has invalid destination: red_circle",
+      "llm_calls": 1,
+      "prompt_tokens": 1421,
+      "completion_tokens": 139,
+      "latency_s": 1.554,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "box"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "box"
+          },
+          {
+            "skill": "REACH",
+            "target": "box"
+          },
+          {
+            "skill": "GRASP",
+            "target": "box"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_circle"
+          },
+          {
+            "skill": "PLACE",
+            "object": "box",
+            "target": "red_circle"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "C02",
+      "category": "colour_wording",
+      "instruction": "move box to red circle",
+      "expected": "box -> red_area",
+      "got": "box -> red_area",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "planned box -> red_area",
+      "llm_calls": 1,
+      "prompt_tokens": 952,
+      "completion_tokens": 58,
+      "latency_s": 0.772,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "box"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "box"
+          },
+          {
+            "skill": "REACH",
+            "target": "box"
+          },
+          {
+            "skill": "GRASP",
+            "target": "box"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_area"
+          },
+          {
+            "skill": "PLACE",
+            "object": "box",
+            "target": "red_area"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "C03",
+      "category": "colour_wording",
+      "instruction": "move blue square to red area",
+      "expected": "box -> red_area",
+      "got": "box -> red_area",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "planned box -> red_area",
+      "llm_calls": 1,
+      "prompt_tokens": 1422,
+      "completion_tokens": 139,
+      "latency_s": 1.441,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "box"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "box"
+          },
+          {
+            "skill": "REACH",
+            "target": "box"
+          },
+          {
+            "skill": "GRASP",
+            "target": "box"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_area"
+          },
+          {
+            "skill": "PLACE",
+            "object": "box",
+            "target": "red_area"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "C03",
+      "category": "colour_wording",
+      "instruction": "move blue square to red area",
+      "expected": "box -> red_area",
+      "got": "box -> red_area",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "planned box -> red_area",
+      "llm_calls": 1,
+      "prompt_tokens": 953,
+      "completion_tokens": 65,
+      "latency_s": 0.694,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "box"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "box"
+          },
+          {
+            "skill": "REACH",
+            "target": "box"
+          },
+          {
+            "skill": "GRASP",
+            "target": "box"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_area"
+          },
+          {
+            "skill": "PLACE",
+            "object": "box",
+            "target": "red_area"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "C04",
+      "category": "colour_wording",
+      "instruction": "Put the green one in the red circle.",
+      "expected": "cylinder -> red_area",
+      "got": "error",
+      "outcome": "malformed",
+      "correct": false,
+      "detail": "Action 5 has invalid destination: red_circle",
+      "llm_calls": 1,
+      "prompt_tokens": 1424,
+      "completion_tokens": 144,
+      "latency_s": 2.293,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "cylinder"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "cylinder"
+          },
+          {
+            "skill": "REACH",
+            "target": "cylinder"
+          },
+          {
+            "skill": "GRASP",
+            "target": "cylinder"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_circle"
+          },
+          {
+            "skill": "PLACE",
+            "object": "cylinder",
+            "target": "red_circle"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "C04",
+      "category": "colour_wording",
+      "instruction": "Put the green one in the red circle.",
+      "expected": "cylinder -> red_area",
+      "got": "cylinder -> red_area",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "planned cylinder -> red_area",
+      "llm_calls": 1,
+      "prompt_tokens": 956,
+      "completion_tokens": 64,
+      "latency_s": 0.873,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "cylinder"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "cylinder"
+          },
+          {
+            "skill": "REACH",
+            "target": "cylinder"
+          },
+          {
+            "skill": "GRASP",
+            "target": "cylinder"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_area"
+          },
+          {
+            "skill": "PLACE",
+            "object": "cylinder",
+            "target": "red_area"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "C05",
+      "category": "colour_wording",
+      "instruction": "Place the grey ball in the red area.",
+      "expected": "stone -> red_area",
+      "got": "error",
+      "outcome": "malformed",
+      "correct": false,
+      "detail": "Action 5 has invalid destination: red_circle",
+      "llm_calls": 1,
+      "prompt_tokens": 1424,
+      "completion_tokens": 139,
+      "latency_s": 1.323,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "stone"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "stone"
+          },
+          {
+            "skill": "REACH",
+            "target": "stone"
+          },
+          {
+            "skill": "GRASP",
+            "target": "stone"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_circle"
+          },
+          {
+            "skill": "PLACE",
+            "object": "stone",
+            "target": "red_circle"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "C05",
+      "category": "colour_wording",
+      "instruction": "Place the grey ball in the red area.",
+      "expected": "stone -> red_area",
+      "got": "stone -> red_area",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "planned stone -> red_area",
+      "llm_calls": 1,
+      "prompt_tokens": 956,
+      "completion_tokens": 65,
+      "latency_s": 0.89,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "stone"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "stone"
+          },
+          {
+            "skill": "REACH",
+            "target": "stone"
+          },
+          {
+            "skill": "GRASP",
+            "target": "stone"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_area"
+          },
+          {
+            "skill": "PLACE",
+            "object": "stone",
+            "target": "red_area"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "A01",
+      "category": "alt_scene",
+      "instruction": "Move the box to the red area.",
+      "expected": "box -> red_area",
+      "got": "box -> red_area",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "planned box -> red_area",
+      "llm_calls": 1,
+      "prompt_tokens": 1423,
+      "completion_tokens": 139,
+      "latency_s": 1.228,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "box"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "box"
+          },
+          {
+            "skill": "REACH",
+            "target": "box"
+          },
+          {
+            "skill": "GRASP",
+            "target": "box"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_area"
+          },
+          {
+            "skill": "PLACE",
+            "object": "box",
+            "target": "red_area"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "A01",
+      "category": "alt_scene",
+      "instruction": "Move the box to the red area.",
+      "expected": "box -> red_area",
+      "got": "box -> red_area",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "planned box -> red_area",
+      "llm_calls": 1,
+      "prompt_tokens": 955,
+      "completion_tokens": 63,
+      "latency_s": 0.839,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "box"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "box"
+          },
+          {
+            "skill": "REACH",
+            "target": "box"
+          },
+          {
+            "skill": "GRASP",
+            "target": "box"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_area"
+          },
+          {
+            "skill": "PLACE",
+            "object": "box",
+            "target": "red_area"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "A02",
+      "category": "alt_scene",
+      "instruction": "Put the rock in the red zone.",
+      "expected": "stone -> red_area",
+      "got": "stone -> red_area",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "planned stone -> red_area",
+      "llm_calls": 1,
+      "prompt_tokens": 1423,
+      "completion_tokens": 139,
+      "latency_s": 1.568,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "stone"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "stone"
+          },
+          {
+            "skill": "REACH",
+            "target": "stone"
+          },
+          {
+            "skill": "GRASP",
+            "target": "stone"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_area"
+          },
+          {
+            "skill": "PLACE",
+            "object": "stone",
+            "target": "red_area"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "A02",
+      "category": "alt_scene",
+      "instruction": "Put the rock in the red zone.",
+      "expected": "stone -> red_area",
+      "got": "stone -> red_area",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "planned stone -> red_area",
+      "llm_calls": 1,
+      "prompt_tokens": 955,
+      "completion_tokens": 63,
+      "latency_s": 0.848,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "stone"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "stone"
+          },
+          {
+            "skill": "REACH",
+            "target": "stone"
+          },
+          {
+            "skill": "GRASP",
+            "target": "stone"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_area"
+          },
+          {
+            "skill": "PLACE",
+            "object": "stone",
+            "target": "red_area"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "A03",
+      "category": "alt_scene",
+      "instruction": "Take the green cylinder to the target.",
+      "expected": "cylinder -> red_area",
+      "got": "cylinder -> red_area",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "planned cylinder -> red_area",
+      "llm_calls": 1,
+      "prompt_tokens": 1423,
+      "completion_tokens": 144,
+      "latency_s": 1.794,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "cylinder"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "cylinder"
+          },
+          {
+            "skill": "REACH",
+            "target": "cylinder"
+          },
+          {
+            "skill": "GRASP",
+            "target": "cylinder"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_area"
+          },
+          {
+            "skill": "PLACE",
+            "object": "cylinder",
+            "target": "red_area"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "A03",
+      "category": "alt_scene",
+      "instruction": "Take the green cylinder to the target.",
+      "expected": "cylinder -> red_area",
+      "got": "cylinder -> red_area",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "planned cylinder -> red_area",
+      "llm_calls": 1,
+      "prompt_tokens": 955,
+      "completion_tokens": 62,
+      "latency_s": 0.824,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "cylinder"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "cylinder"
+          },
+          {
+            "skill": "REACH",
+            "target": "cylinder"
+          },
+          {
+            "skill": "GRASP",
+            "target": "cylinder"
+          },
+          {
+            "skill": "MOVE_TO",
+            "target": "red_area"
+          },
+          {
+            "skill": "PLACE",
+            "object": "cylinder",
+            "target": "red_area"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "U01",
+      "category": "unknown_object",
+      "instruction": "Pick up the banana and place it in the red area.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "No object named 'banana' is present in the scene. The visible objects are: blue square, green circle, gray sphere.",
+      "llm_calls": 1,
+      "prompt_tokens": 1427,
+      "completion_tokens": 59,
+      "latency_s": 0.619,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "No object named 'banana' is present in the scene. The visible objects are: blue square, green circle, gray sphere."
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "U01",
+      "category": "unknown_object",
+      "instruction": "Pick up the banana and place it in the red area.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "there is no banana in the scene",
+      "llm_calls": 1,
+      "prompt_tokens": 959,
+      "completion_tokens": 56,
+      "latency_s": 0.62,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "there is no banana in the scene"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "U02",
+      "category": "unknown_object",
+      "instruction": "Pick up the laptop and put it in the red zone.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "No object named 'laptop' is present in the scene. The visible objects are: blue square, green circle, gray sphere.",
+      "llm_calls": 1,
+      "prompt_tokens": 1427,
+      "completion_tokens": 60,
+      "latency_s": 0.646,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "No object named 'laptop' is present in the scene. The visible objects are: blue square, green circle, gray sphere."
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "U02",
+      "category": "unknown_object",
+      "instruction": "Pick up the laptop and put it in the red zone.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "no laptop is present in the scene",
+      "llm_calls": 1,
+      "prompt_tokens": 959,
+      "completion_tokens": 54,
+      "latency_s": 0.618,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "no laptop is present in the scene"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "U03",
+      "category": "unknown_object",
+      "instruction": "Grab the chair and place it in the red area.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "No object named 'chair' is present in the scene. The visible objects are: blue square, green circle, gray sphere.",
+      "llm_calls": 1,
+      "prompt_tokens": 1426,
+      "completion_tokens": 59,
+      "latency_s": 0.658,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "No object named 'chair' is present in the scene. The visible objects are: blue square, green circle, gray sphere."
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "U03",
+      "category": "unknown_object",
+      "instruction": "Grab the chair and place it in the red area.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "there is no object named 'chair' in the scene",
+      "llm_calls": 1,
+      "prompt_tokens": 958,
+      "completion_tokens": 60,
+      "latency_s": 0.666,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "there is no object named 'chair' in the scene"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "U04",
+      "category": "unknown_object",
+      "instruction": "Move the pyramid to the target.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "No object named 'pyramid' is present in the scene. The visible objects are: blue square, green circle, and gray sphere.",
+      "llm_calls": 1,
+      "prompt_tokens": 1422,
+      "completion_tokens": 61,
+      "latency_s": 0.67,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "No object named 'pyramid' is present in the scene. The visible objects are: blue square, green circle, and gray sphere."
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "U04",
+      "category": "unknown_object",
+      "instruction": "Move the pyramid to the target.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "no pyramid is in the scene",
+      "llm_calls": 1,
+      "prompt_tokens": 954,
+      "completion_tokens": 54,
+      "latency_s": 0.648,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "no pyramid is in the scene"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "D01",
+      "category": "bad_destination",
+      "instruction": "Grab the stone and place it in the green zone.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "There is no 'green zone' in the target regions; the only target region is 'red circle'. Also, 'stone' corresponds to the gray sphere, which is present, but the destination is invalid.",
+      "llm_calls": 1,
+      "prompt_tokens": 1426,
+      "completion_tokens": 75,
+      "latency_s": 1.16,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "There is no 'green zone' in the target regions; the only target region is 'red circle'. Also, 'stone' corresponds to the gray sphere, which is present, but the destination is invalid."
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "D01",
+      "category": "bad_destination",
+      "instruction": "Grab the stone and place it in the green zone.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "there is no green target region; the only target region is red_area",
+      "llm_calls": 1,
+      "prompt_tokens": 958,
+      "completion_tokens": 62,
+      "latency_s": 0.714,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "there is no green target region; the only target region is red_area"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "D02",
+      "category": "bad_destination",
+      "instruction": "Put the cylinder in the yellow area.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "There is no yellow area in the target regions; only 'red circle' is present. Also, there is no object named 'cylinder'—the green object is a 'green circle', which matches the color green, and by the color rule, green objects are cylinders. However, the target 'yellow area' does not exist.",
+      "llm_calls": 1,
+      "prompt_tokens": 1423,
+      "completion_tokens": 101,
+      "latency_s": 1.038,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "There is no yellow area in the target regions; only 'red circle' is present. Also, there is no object named 'cylinder'—the green object is a 'green circle', which matches the color green, and by the color rule, green objects are cylinders. However, the target 'yellow area' does not exist."
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "D02",
+      "category": "bad_destination",
+      "instruction": "Put the cylinder in the yellow area.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "there is no yellow target region; the only target region is red_area",
+      "llm_calls": 1,
+      "prompt_tokens": 955,
+      "completion_tokens": 63,
+      "latency_s": 0.689,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "there is no yellow target region; the only target region is red_area"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "D03",
+      "category": "bad_destination",
+      "instruction": "Put the stone on the moon.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "There is no target region named 'moon' in the scene. The only target region present is 'red circle'.",
+      "llm_calls": 1,
+      "prompt_tokens": 1422,
+      "completion_tokens": 57,
+      "latency_s": 0.65,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "There is no target region named 'moon' in the scene. The only target region present is 'red circle'."
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "D03",
+      "category": "bad_destination",
+      "instruction": "Put the stone on the moon.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "there is no target region named 'moon'; the only target is red_area",
+      "llm_calls": 1,
+      "prompt_tokens": 954,
+      "completion_tokens": 62,
+      "latency_s": 0.694,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "there is no target region named 'moon'; the only target is red_area"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "D04",
+      "category": "bad_destination",
+      "instruction": "Move the box to the blue area.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "There is no target region called 'blue area' in the scene; only 'red circle' is present as a target region.",
+      "llm_calls": 1,
+      "prompt_tokens": 1423,
+      "completion_tokens": 59,
+      "latency_s": 0.624,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "There is no target region called 'blue area' in the scene; only 'red circle' is present as a target region."
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "D04",
+      "category": "bad_destination",
+      "instruction": "Move the box to the blue area.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "there is no blue target region in the scene; only red_area exists",
+      "llm_calls": 1,
+      "prompt_tokens": 955,
+      "completion_tokens": 62,
+      "latency_s": 0.687,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "there is no blue target region in the scene; only red_area exists"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "N01",
+      "category": "no_destination",
+      "instruction": "Pick up the cylinder.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "false_accept",
+      "correct": false,
+      "detail": "unexpected skill sequence ['SEARCH', 'APPROACH', 'REACH', 'GRASP']",
+      "llm_calls": 1,
+      "prompt_tokens": 1420,
+      "completion_tokens": 97,
+      "latency_s": 0.945,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "cylinder"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "cylinder"
+          },
+          {
+            "skill": "REACH",
+            "target": "cylinder"
+          },
+          {
+            "skill": "GRASP",
+            "target": "cylinder"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "N01",
+      "category": "no_destination",
+      "instruction": "Pick up the cylinder.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "no destination was given; the instruction only says to pick up, not move to a region",
+      "llm_calls": 1,
+      "prompt_tokens": 952,
+      "completion_tokens": 62,
+      "latency_s": 0.692,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "no destination was given; the instruction only says to pick up, not move to a region"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "N02",
+      "category": "no_destination",
+      "instruction": "Grab the rock.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "false_accept",
+      "correct": false,
+      "detail": "unexpected skill sequence ['SEARCH', 'APPROACH', 'REACH', 'GRASP']",
+      "llm_calls": 1,
+      "prompt_tokens": 1419,
+      "completion_tokens": 93,
+      "latency_s": 0.926,
+      "plan": {
+        "feasible": true,
+        "actions": [
+          {
+            "skill": "SEARCH",
+            "target": "stone"
+          },
+          {
+            "skill": "APPROACH",
+            "target": "stone"
+          },
+          {
+            "skill": "REACH",
+            "target": "stone"
+          },
+          {
+            "skill": "GRASP",
+            "target": "stone"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "N02",
+      "category": "no_destination",
+      "instruction": "Grab the rock.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "no destination was given; the instruction only says to grab, not move to a region",
+      "llm_calls": 1,
+      "prompt_tokens": 951,
+      "completion_tokens": 61,
+      "latency_s": 0.81,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "no destination was given; the instruction only says to grab, not move to a region"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "M01",
+      "category": "not_manipulation",
+      "instruction": "Move the robot to Mars.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "The instruction 'Move the robot to Mars' is not feasible in this context, as there is no object or target region named 'Mars' in the scene. The robot can only operate within the provided visual scene, which includes objects: blue square, green circle, gray sphere, and target region: red circle.",
+      "llm_calls": 1,
+      "prompt_tokens": 1421,
+      "completion_tokens": 97,
+      "latency_s": 1.07,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "The instruction 'Move the robot to Mars' is not feasible in this context, as there is no object or target region named 'Mars' in the scene. The robot can only operate within the provided visual scene, which includes objects: blue square, green circle, gray sphere, and target region: red circle."
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "M01",
+      "category": "not_manipulation",
+      "instruction": "Move the robot to Mars.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "the instruction asks to move the robot itself, not an object in the scene, and Mars is not a present target region",
+      "llm_calls": 1,
+      "prompt_tokens": 953,
+      "completion_tokens": 70,
+      "latency_s": 0.96,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "the instruction asks to move the robot itself, not an object in the scene, and Mars is not a present target region"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "M02",
+      "category": "not_manipulation",
+      "instruction": "Fly the drone to the red area.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "The robot arm does not have a drone, and the instruction 'Fly the drone' is outside the robot's capabilities. The only manipulable objects are 'blue square', 'green circle', and 'gray sphere', and the only target region is 'red circle'.",
+      "llm_calls": 1,
+      "prompt_tokens": 1423,
+      "completion_tokens": 88,
+      "latency_s": 1.638,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "The robot arm does not have a drone, and the instruction 'Fly the drone' is outside the robot's capabilities. The only manipulable objects are 'blue square', 'green circle', and 'gray sphere', and the only target region is 'red circle'."
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "M02",
+      "category": "not_manipulation",
+      "instruction": "Fly the drone to the red area.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "the drone is not in the scene; the robot can only move box, cylinder, or stone",
+      "llm_calls": 1,
+      "prompt_tokens": 955,
+      "completion_tokens": 68,
+      "latency_s": 0.985,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "the drone is not in the scene; the robot can only move box, cylinder, or stone"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "M03",
+      "category": "not_manipulation",
+      "instruction": "Delete the box.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "The instruction asks to 'delete the box', but there is no object named 'box' in the scene. The blue object is a 'blue square', which by color rules corresponds to 'box', but the instruction says 'delete' which is not a supported robot skill. The robot can only perform SEARCH, APPROACH, REACH, GRASP, MOVE_TO, PLACE, VERIFY, or STOP.",
+      "llm_calls": 1,
+      "prompt_tokens": 1419,
+      "completion_tokens": 114,
+      "latency_s": 1.31,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "The instruction asks to 'delete the box', but there is no object named 'box' in the scene. The blue object is a 'blue square', which by color rules corresponds to 'box', but the instruction says 'delete' which is not a supported robot skill. The robot can only perform SEARCH, APPROACH, REACH, GRASP, MOVE_TO, PLACE, VERIFY, or STOP."
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "M03",
+      "category": "not_manipulation",
+      "instruction": "Delete the box.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "the instruction asks to delete the box, which is not a move-to-region action and has no destination",
+      "llm_calls": 1,
+      "prompt_tokens": 951,
+      "completion_tokens": 64,
+      "latency_s": 0.721,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "the instruction asks to delete the box, which is not a move-to-region action and has no destination"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "M04",
+      "category": "not_manipulation",
+      "instruction": "What colour is the box?",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "The instruction asks for the color of the 'box', but the scene contains a 'blue square' which is the only object that could be interpreted as a 'box' (since blue objects are mapped to 'box'). However, the instruction is not a manipulative task and does not require any robot action sequence; no action plan can be generated because the user is asking for information, not commanding an action. The robot cannot perform a SEARCH/GRASP/MOVE_TO sequence to answer a question about color.",
+      "llm_calls": 1,
+      "prompt_tokens": 1421,
+      "completion_tokens": 135,
+      "latency_s": 1.847,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "The instruction asks for the color of the 'box', but the scene contains a 'blue square' which is the only object that could be interpreted as a 'box' (since blue objects are mapped to 'box'). However, the instruction is not a manipulative task and does not require any robot action sequence; no action plan can be generated because the user is asking for information, not commanding an action. The robot cannot perform a SEARCH/GRASP/MOVE_TO sequence to answer a question about color."
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "M04",
+      "category": "not_manipulation",
+      "instruction": "What colour is the box?",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "the instruction is a question about colour, not a move-an-object-to-a-region task",
+      "llm_calls": 1,
+      "prompt_tokens": 953,
+      "completion_tokens": 61,
+      "latency_s": 0.803,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "the instruction is a question about colour, not a move-an-object-to-a-region task"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "V01",
+      "category": "not_in_scene",
+      "instruction": "Move the cylinder to the red area.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "There is no cylinder in the scene. The only green object is a gray sphere, but green objects are mapped to cylinders; however, the scene contains 'gray sphere' (not green), and there is no object matching 'cylinder' explicitly. Since 'gray sphere' is not green, it does not match 'cylinder' per the color rule: green → cylinder, blue → box, gray/grey → stone. Thus, no cylinder exists.",
+      "llm_calls": 1,
+      "prompt_tokens": 1420,
+      "completion_tokens": 125,
+      "latency_s": 1.367,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "There is no cylinder in the scene. The only green object is a gray sphere, but green objects are mapped to cylinders; however, the scene contains 'gray sphere' (not green), and there is no object matching 'cylinder' explicitly. Since 'gray sphere' is not green, it does not match 'cylinder' per the color rule: green → cylinder, blue → box, gray/grey → stone. Thus, no cylinder exists."
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "V01",
+      "category": "not_in_scene",
+      "instruction": "Move the cylinder to the red area.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "'cylinder' is not visible in the current scene (scene: blue square -> box, gray sphere -> stone, red circle -> red_area)",
+      "llm_calls": 1,
+      "prompt_tokens": 946,
+      "completion_tokens": 64,
+      "latency_s": 0.678,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "'cylinder' is not visible in the current scene (scene: blue square -> box, gray sphere -> stone, red circle -> red_area)"
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V4",
+      "id": "V02",
+      "category": "not_in_scene",
+      "instruction": "Move the box to the red area.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "No target region 'red area' detected in the scene.",
+      "llm_calls": 1,
+      "prompt_tokens": 1424,
+      "completion_tokens": 45,
+      "latency_s": 0.583,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "No target region 'red area' detected in the scene."
+          }
+        ]
+      },
+      "trial": 1
+    },
+    {
+      "version": "V5",
+      "id": "V02",
+      "category": "not_in_scene",
+      "instruction": "Move the box to the red area.",
+      "expected": "infeasible",
+      "got": "infeasible",
+      "outcome": "correct",
+      "correct": true,
+      "detail": "no target region named 'red area' is detected in the current scene",
+      "llm_calls": 1,
+      "prompt_tokens": 950,
+      "completion_tokens": 64,
+      "latency_s": 0.696,
+      "plan": {
+        "feasible": false,
+        "actions": [
+          {
+            "skill": "STOP",
+            "reason": "no target region named 'red area' is detected in the current scene"
+          }
+        ]
+      },
+      "trial": 1
+    }
+  ]
+}

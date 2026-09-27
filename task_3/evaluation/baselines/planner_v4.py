@@ -1,0 +1,584 @@
+# =========================================================================
+# ARCHIVED BASELINE - planner version V4 ("resolution only, strict validation")
+# Kept ONLY for the before/after comparison in
+# task_3/evaluation/compare_planner_versions.py. The code below is the
+# planner exactly as it was before the V5 redesign (unchanged, apart from
+# this header). Do not import it from the live pipeline.
+# =========================================================================
+
+"""
+Task 3: Natural-language -> structured action plan.
+
+Scene information comes from Task 2 (task_3.scene_builder.build_scene,
+which calls task_2.perception.understand_scene) run on a live camera
+frame. plan_from_instruction() accepts either an already-captured
+image, a precomputed scene_info dict, or nothing -- in which case it
+renders a fresh frame from scene.xml itself, purely so this file can
+still be run standalone for manual testing without a caller supplying
+an image.
+
+"""
+
+
+import json
+import os
+
+from pathlib import Path
+
+
+from openai import OpenAI
+from PIL import Image
+
+# Works both when imported as a package ("from task_3.planner import
+# ...", e.g. from Task 5) and when run directly ("python planner.py"
+# from inside task_3/, e.g. for manual testing).
+try:
+    from task_3.scene_builder import build_scene
+except ImportError:
+    from scene_builder import build_scene
+
+# ---------------------------------------------------------------------------
+# Provider configuration. Default: OpenAI. Uncomment ONE alternative block
+# below instead if your team is using Qwen-VL (free quota) or local Ollama.
+# ---------------------------------------------------------------------------
+
+# client = OpenAI()  # reads OPENAI_API_KEY from your environment
+# MODEL = "gpt-5-mini"
+
+# --- Qwen (Alibaba Cloud, Singapore region, free quota) ---
+client = OpenAI(api_key=os.environ["DASHSCOPE_API_KEY"],
+                base_url="https://dashscope-intl.aliyuncs.com/compatible-mode/v1")
+MODEL = "qwen3-vl-flash"
+
+# --- Local Ollama (free, offline, no API key needed) ---
+# client = OpenAI(
+#     api_key="ollama",
+#     base_url="http://localhost:11434/v1",
+# )
+
+
+# MODEL = "qwen3:4b"
+
+ALLOWED_SKILLS = ["SEARCH", "APPROACH", "REACH", "GRASP", "MOVE_TO", "PLACE", "VERIFY", "STOP"]
+
+# Mocked scene info -- stand-in until Task 2 (VLM grounding) is ready.
+# Names match the objects/target defined in scene.xml.
+# SCENE_MOCK = {
+#     "objects": ["stone", "box", "cylinder"],
+#     "target_regions": ["red_area"],
+# }
+
+SYSTEM_PROMPT = f"""
+You are the task planner for a simulated robot arm with
+a three-prong gripper.
+
+The current visual scene (objects and target regions actually
+detected this frame) will be provided in the user message, under
+"Objects:" and "Target regions:", followed by "User instruction:".
+Only reference objects/regions listed there -- if something the
+user mentions is not listed, treat it as not currently present.
+
+Your job is to convert the user's natural-language
+instruction into a structured JSON robot action plan.
+
+You may ONLY use these skills:
+
+SEARCH
+APPROACH
+REACH
+GRASP
+MOVE_TO
+PLACE
+VERIFY
+STOP
+
+Convert natural-language descriptions to these names.
+
+Examples:
+
+"blue box" -> "box"
+"blue cube" -> "box"
+
+"rock" -> "stone"
+"sphere" -> "stone"
+"grey stone" -> "stone"
+
+"green cylinder" -> "cylinder"
+
+"red area" -> "red_area"
+"red zone" -> "red_area"
+"red marker" -> "red_area"
+"red spot" -> "red_area"
+
+Also
+OBJECT MATCHING RULES:
+
+Objects in the visual scene may include descriptive attributes
+such as color, for example "gray stone", "green sphere",
+or "blue tool".
+
+A user's object reference does not need to exactly match the
+full scene description.
+
+For example:
+- "stone" may refer to "gray stone"
+- "tool" may refer to "blue tool"
+- "sphere" may refer to "green sphere"
+
+If exactly one visible object matches the user's description,
+use that object's full scene name in the action plan.
+
+If multiple visible objects could match the description,
+do not guess. Return an infeasible plan with STOP and explain
+that the target is ambiguous.
+
+Do not treat a missing color adjective as meaning the object
+does not exist.
+
+COLOR IS THE PRIMARY WAY TO IDENTIFY AN OBJECT:
+
+The camera looks down at a steep angle, so the vision system's shape
+word for an object is unreliable -- it may call the same object a
+"sphere", "circle", "square", "disc", "blob", or any other shape word
+depending on the frame, while its COLOR stays reliable. This is not
+just a tie-breaker for when color and shape disagree: treat ANY
+scene object of a given color as that canonical object, no matter
+what shape word came with it, as long as only one object of that
+color is present in the scene:
+
+- ANY blue object   -> box       (blue square, blue circle, blue blob, blue anything -> box)
+- ANY green object  -> cylinder  (green sphere, green square, green anything -> cylinder)
+- ANY gray/grey object -> stone  (gray circle, grey blob, gray anything -> stone)
+
+Only fall back to matching by shape word alone when the scene object
+has no color given at all. If two or more visible objects share the
+same color, do not guess -- treat it as ambiguous per the rules
+above.
+
+The same applies to the target region: any reddish target region
+(whatever shape word it's given -- "red circle", "red area", "red
+patch", etc.) is "red_area".
+
+TARGET REGION MATCHING RULES:
+
+Target regions may also contain descriptive attributes.
+
+For example, if the scene contains exactly one target region
+called "red circle", then references such as:
+- "red area"
+- "red region"
+- "red zone"
+- "red circle"
+
+may refer to that region when the intended target is
+unambiguous.
+
+If the destination is missing or genuinely ambiguous,
+return STOP rather than guessing.
+
+============================================================
+ACTION SCHEMA
+============================================================
+
+SEARCH:
+{{"skill": "SEARCH", "target": "<object>"}}
+
+APPROACH:
+{{"skill": "APPROACH", "target": "<object>"}}
+
+REACH:
+{{"skill": "REACH", "target": "<object>"}}
+
+GRASP:
+{{"skill": "GRASP", "target": "<object>"}}
+
+MOVE_TO:
+{{"skill": "MOVE_TO", "target": "<target_region>"}}
+
+PLACE:
+{{
+    "skill": "PLACE",
+    "object": "<object>",
+    "target": "<target_region>"
+}}
+
+VERIFY:
+{{
+    "skill": "VERIFY",
+    "verify_type": "<GRASP or PLACE>",
+    "object": "<object>",
+    "target": "<target_region when required>"
+}}
+
+STOP:
+{{
+    "skill": "STOP",
+    "reason": "<reason>"
+}}
+
+
+============================================================
+MANIPULATION SEQUENCE
+============================================================
+
+For an instruction that asks the robot to move an object
+to a target region, use this sequence:
+
+1. SEARCH for the object.
+2. APPROACH the object.
+3. REACH the object's pre-grasp position.
+4. GRASP the object.
+5. MOVE_TO the destination.
+6. PLACE the object at the destination.
+
+Do NOT omit REACH between APPROACH and GRASP.
+
+For PLACE, ALWAYS provide BOTH:
+
+- "object"
+- "target"
+
+Do not put the object name in the PLACE "target" field.
+
+Correct:
+{{
+    "skill": "PLACE",
+    "object": "box",
+    "target": "red_area"
+
+
+}}
+
+Incorrect:
+{{
+    "skill": "PLACE",
+    "target": "box"
+}}
+
+Do not invent fields such as:
+
+
+"location"
+"destination"
+"item"
+
+Use only the fields defined above.
+
+
+============================================================
+FEASIBILITY
+============================================================
+
+Only reference objects and target regions that exist in
+the scene.
+
+
+If the requested object or target does not exist, or the
+instruction is impossible or nonsensical:
+
+- set "feasible" to false
+- return one STOP action
+- explain the reason in the STOP action
+
+Do not guess or invent objects.
+
+============================================================
+EXAMPLE
+============================================================
+
+User instruction:
+
+Move the blue box to the red area.
+
+Correct output:
+
+{{
+    "feasible": true,
+    "actions": [
+        {{
+            "skill": "SEARCH",
+            "target": "box"
+        }},
+        {{
+            "skill": "APPROACH",
+            "target": "box"
+        }},
+        {{
+            "skill": "REACH",
+            "target": "box"
+        }},
+        {{
+            "skill": "GRASP",
+            "target": "box"
+        }},
+        {{
+            "skill": "MOVE_TO",
+            "target": "red_area"
+        }},
+        {{
+            "skill": "PLACE",
+            "object": "box",
+            "target": "red_area"
+        }}
+    ]
+}}
+
+Respond ONLY with valid JSON.
+
+Do not include markdown.
+Do not include explanations outside the JSON.
+"""
+
+def validate_action_plan(
+    plan,
+):
+    """
+    Validate the structure of the action plan returned
+    by the language model.
+
+
+    """
+
+    if not isinstance(
+        plan,
+        dict,
+    ):
+
+        return (
+            False,
+            "Planner output is not a dictionary",
+        )
+
+    actions = plan.get(
+        "actions"
+    )
+
+    if not isinstance(
+        actions,
+        list,
+    ):
+
+        return (
+            False,
+            "Planner actions are not a list",
+        )
+
+    valid_objects = {
+        "stone",
+        "box",
+        "cylinder",
+    }
+
+    valid_targets = {
+        "red_area",
+    }
+
+
+    for index, action in enumerate(
+        actions,
+        start=1,
+    ):
+
+        if not isinstance(
+            action,
+            dict,
+        ):
+
+            return (
+                False,
+                f"Action {index} is not a dictionary",
+            )
+
+        skill = action.get(
+            "skill"
+        )
+
+        if skill not in ALLOWED_SKILLS:
+
+            return (
+                False,
+                (
+                    f"Action {index} uses "
+                    f"invalid skill: {skill}"
+                ),
+            )
+
+        # ----------------------------------------------
+        # Object-directed skills
+        # ----------------------------------------------
+
+        if skill in {
+            "SEARCH",
+            "APPROACH",
+            "REACH",
+            "GRASP",
+        }:
+
+            target = action.get(
+                "target"
+            )
+
+            if target not in valid_objects:
+
+                return (
+                    False,
+                    (
+                        f"Action {index} has "
+                        f"invalid object target: "
+                        f"{target}"
+                    ),
+                )
+
+        # ----------------------------------------------
+        # MOVE_TO
+        # ----------------------------------------------
+
+        if skill == "MOVE_TO":
+
+            target = action.get(
+                "target"
+            )
+
+            if target not in valid_targets:
+
+                return (
+                    False,
+                    (
+                        f"Action {index} has "
+                        f"invalid destination: "
+                        f"{target}"
+                    ),
+                )
+
+        # ----------------------------------------------
+        # PLACE
+        # ----------------------------------------------
+
+        if skill == "PLACE":
+
+            object_name = action.get(
+                "object"
+            )
+
+            target = action.get(
+                "target"
+            )
+
+            if object_name not in valid_objects:
+
+                return (
+                    False,
+                    (
+                        f"Action {index} PLACE "
+                        f"has invalid object: "
+                        f"{object_name}"
+                    ),
+                )
+
+            if target not in valid_targets:
+                return (
+                    False,
+                    (
+                        f"Action {index} PLACE "
+                        f"has invalid target: "
+                        f"{target}"
+                    ),
+                )
+    return (
+        True,
+        None,
+    )
+
+def _capture_live_test_image(camera_name: str = "overhead_cam"):
+    """
+    Render a fresh frame straight from scene.xml.
+
+    Only used when plan_from_instruction() is called with neither an
+    image nor a scene_info -- i.e. when this file is run standalone
+    (`python planner.py`) for manual testing, with no Task 5 pipeline
+    supplying a live camera frame. This replaces the old hardcoded,
+    machine-specific test image path.
+    """
+
+    import mujoco
+
+    project_root = Path(__file__).resolve().parent.parent
+    model = mujoco.MjModel.from_xml_path(str(project_root / "scene.xml"))
+    data = mujoco.MjData(model)
+    mujoco.mj_forward(model, data)
+
+    renderer = mujoco.Renderer(model, height=480, width=640)
+    renderer.update_scene(data, camera=camera_name)
+    rgb = renderer.render()
+    renderer.close()
+
+    return Image.fromarray(rgb)
+
+
+def plan_from_instruction(instruction: str, image=None, scene_info=None) -> dict:
+    """
+    Call the LLM planner and return a validated action-plan dict.
+
+    Scene information is obtained, in priority order:
+        1. scene_info, if the caller already computed it (avoids a
+           second Task 2 call when Task 5 already ran perception this
+           frame).
+        2. image, run through Task 2's build_scene() -- pass in the
+           live frame captured from the robot's camera.
+        3. Neither given: render a fresh frame from scene.xml here,
+           for standalone/manual testing only.
+    """
+
+    if scene_info is None:
+        if image is None:
+            image = _capture_live_test_image()
+        scene_info = build_scene(image=image)
+
+    objects = scene_info["objects"]
+    target_regions = scene_info["target_regions"]
+
+    scene_text = f"""
+    Current visual scene:
+
+    Objects:{", ".join(objects) if objects else "None detected"}
+
+    Target regions:{", ".join(target_regions) if target_regions else "None detected"}
+
+    User instruction:{instruction}
+    """
+    response = client.chat.completions.create(
+        model=MODEL,
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": scene_text},
+        ],
+    )
+    raw = response.choices[0].message.content
+
+    try:
+        start, end = raw.find("{"), raw.rfind("}") + 1
+        plan = json.loads(raw[start:end])
+    except (ValueError, json.JSONDecodeError):
+        return {
+            "feasible": False,
+            "actions": [{"skill": "STOP", "reason": "Could not parse planner output"}],
+        }
+
+    # Basic schema validation: reject any plan using an undefined skill.
+    for action in plan.get("actions", []):
+        if action.get("skill") not in ALLOWED_SKILLS:
+            return {
+                "feasible": False,
+                "actions": [{"skill": "STOP", "reason": f"Invalid skill: {action.get('skill')}"}],
+            }
+
+    return plan
+
+
+if __name__ == "__main__":
+    while True:
+        instruction = input("\nType an instruction (or 'quit'): ").strip()
+        if instruction.lower() == "quit":
+            break
+        plan = plan_from_instruction(instruction)
+        print(json.dumps(plan, indent=2))
