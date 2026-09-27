@@ -1,0 +1,17 @@
+metric,value
+Number of trials,24
+Target Grounding Accuracy (%),95.83333333333333
+Action Planning Accuracy (%),95.83333333333333
+Manipulation Success Rate (%),34.78260869565217
+End-to-End Task Success Rate (%),33.333333333333336
+Average Task Completion Time - All Trials (s),26.292968045842525
+Average Task Completion Time - Successful Trials (s),32.11052793750423
+Mean Absolute RGB-D X Error (m),0.011156317534788381
+Mean Absolute RGB-D Y Error (m),0.0137790829426505
+Mean Absolute RGB-D Z Error (m),0.02808160348159922
+Mean RGB-D XY Localisation Error (m),0.018794763051329925
+Mean RGB-D 3D Localisation Error (m),0.03591437842339399
+Mean Placement Error (m),0.010218590247036412
+Trials Using Grasp Recovery,7
+Task 2 Calls,31
+Task 3 Calls,24
