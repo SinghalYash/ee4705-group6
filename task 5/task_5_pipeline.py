@@ -7,6 +7,9 @@ from PIL import Image
 
 from camera_grounding import bbox_depth_to_world
 
+from task_4.robot_skills import (
+    OBJECT_PROPERTIES,
+)
 
 # ==========================================================
 # PROJECT PATHS
@@ -107,6 +110,7 @@ def capture_rgbd(
         depth_image,
     )
 
+
 # ==========================================================
 # VISUAL TARGET NAMES
 # ==========================================================
@@ -117,6 +121,42 @@ VISUAL_TARGET_NAMES = {
     "cylinder": "green cylinder",
 }
 
+
+# ==========================================================
+# PERCEPTION CAMERA SETTINGS
+# ==========================================================
+
+INITIAL_GROUNDING_CAMERA = "overhead_cam"
+
+SEARCH_CAMERA = "wrist_cam"
+
+
+def choose_perception_camera(
+    robot,
+):
+    """
+    Use the overhead camera for the initial global
+    observation.
+
+    Once Task 4 starts visiting search viewpoints, switch
+    to the wrist camera. Since the wrist camera moves with
+    the arm, each search waypoint then provides a genuinely
+    different visual observation.
+    """
+
+    search_attempts = getattr(
+        robot,
+        "search_attempts",
+        0,
+    )
+
+    if search_attempts > 0:
+
+        return SEARCH_CAMERA
+
+    return INITIAL_GROUNDING_CAMERA
+
+
 # ==========================================================
 # TASK 2 PERCEPTION CALLBACK
 # ==========================================================
@@ -124,23 +164,20 @@ VISUAL_TARGET_NAMES = {
 def create_perception_callback(
     robot,
 ):
-    """
-    Build the callback Task 4 calls (as robot.perception_callback)
-    every time it needs to check whether a named target is currently
-    visible. Task 2's cloud backend (task_2/qwen_backend.py) needs no
-    locally loaded model, so nothing is threaded through here besides
-    the robot handle.
-    """
 
     def detect_target(
         target_name,
     ):
 
-        # Convert Task 4's canonical name
-        # into a visual description.
-        visual_target = VISUAL_TARGET_NAMES.get(
-            target_name,
-            target_name,
+        # --------------------------------------------------
+        # CANONICAL NAME -> VISUAL DESCRIPTION
+        # --------------------------------------------------
+
+        visual_target = (
+            VISUAL_TARGET_NAMES.get(
+                target_name,
+                target_name,
+            )
         )
 
         print(
@@ -148,15 +185,37 @@ def create_perception_callback(
             visual_target,
         )
 
-        # Capture the current simulation image.
-        image, depth_image = capture_rgbd(
-            robot,
-            camera_name="overhead_cam",
+        # --------------------------------------------------
+        # CHOOSE CAMERA
+        # --------------------------------------------------
+
+        camera_name = (
+            choose_perception_camera(
+                robot
+            )
         )
 
-        # Run Task 2. (model/processor are unused by the cloud
-        # backend -- ground_object keeps the parameters only so its
-        # signature still matches the older local-model tests.)
+        print(
+            "Perception camera:",
+            camera_name,
+        )
+
+        # --------------------------------------------------
+        # CAPTURE CURRENT RGB-D VIEW
+        # --------------------------------------------------
+
+        (
+            image,
+            depth_image,
+        ) = capture_rgbd(
+            robot,
+            camera_name=camera_name,
+        )
+
+        # --------------------------------------------------
+        # TASK 2 GROUNDING
+        # --------------------------------------------------
+
         result = ground_object(
             None,
             None,
@@ -174,67 +233,136 @@ def create_perception_callback(
             result.target,
         )
 
+        # --------------------------------------------------
+        # SUCCESSFUL GROUNDING
+        # --------------------------------------------------
+
         if (
             result.status == "success"
             and result.target is not None
         ):
 
-            x_min, y_min, x_max, y_max = (
-                result.target.bbox
-            )
+            (
+                x_min,
+                y_min,
+                x_max,
+                y_max,
+            ) = result.target.bbox
 
             centre_x = round(
-                (x_min + x_max) / 2
+                (
+                    x_min
+                    + x_max
+                )
+                / 2
             )
 
             centre_y = round(
-                (y_min + y_max) / 2
+                (
+                    y_min
+                    + y_max
+                )
+                / 2
             )
 
-            depth_value = depth_image[
-                centre_y,
-                centre_x,
-            ]
-
-            estimated_position = bbox_depth_to_world(
-                model=robot.model,
-                data=robot.data,
-                bbox=result.target.bbox,
-                depth=depth_value,
-                camera_name="overhead_cam",
+            # Prevent accidental indexing outside image.
+            centre_x = int(
+                np.clip(
+                    centre_x,
+                    0,
+                    depth_image.shape[1] - 1,
+                )
             )
 
-            # Save the RGB-D estimate for Task 4.
-            robot.perceived_target_position = (
+            centre_y = int(
+                np.clip(
+                    centre_y,
+                    0,
+                    depth_image.shape[0] - 1,
+                )
+            )
+
+            depth_value = (
+                depth_image[
+                    centre_y,
+                    centre_x,
+                ]
+            )
+
+            # --------------------------------------------------
+            # RGB-D -> WORLD COORDINATES
+            # --------------------------------------------------
+
+            estimated_position = (
+                bbox_depth_to_world(
+                    model=robot.model,
+                    data=robot.data,
+                    bbox=result.target.bbox,
+                    depth=depth_value,
+                    camera_name=camera_name,
+                )
+            )
+
+            # --------------------------------------------------
+            # SURFACE POINT -> MANIPULATION REFERENCE
+            # --------------------------------------------------
+
+            manipulation_position = (
                 estimated_position.copy()
+            )
+
+            if (
+                target_name
+                in OBJECT_PROPERTIES
+            ):
+
+                manipulation_position[2] = (
+                    OBJECT_PROPERTIES[
+                        target_name
+                    ][
+                        "placement_half_height"
+                    ]
+                )
+
+            print(
+                "Raw RGB-D surface XYZ:",
+                estimated_position,
+            )
+
+            print(
+                "Task 4 manipulation XYZ:",
+                manipulation_position,
+            )
+
+            # --------------------------------------------------
+            # SEND VISUAL POSITION TO TASK 4
+            # --------------------------------------------------
+
+            robot.perceived_target_position = (
+                manipulation_position.copy()
             )
 
             robot.perceived_target_name = (
                 target_name
             )
 
+            # --------------------------------------------------
+            # EVALUATION-ONLY DIAGNOSTIC
+            # --------------------------------------------------
 
-            # Ground truth ONLY for evaluation -- this comparison is
-            # purely diagnostic logging, so if target_name isn't a
-            # name the simulator recognises (e.g. Task 4's name
-            # normalisation didn't map it to a known canonical name),
-            # skip the comparison instead of crashing the whole run.
-            # The actual perception result returned below does not
-            # depend on any of this.
             try:
 
-                true_position = robot.get_object_position(
-                    target_name
+                true_position = (
+                    robot.get_object_position(
+                        target_name
+                    )
                 )
 
-                position_error = np.linalg.norm(
-                    estimated_position
-                    - true_position
-                )
-
-                print(
-                    "RGB-D estimated XYZ:",
-                    estimated_position,
+                position_error = (
+                    np.linalg.norm(
+                        estimated_position
+                        - true_position
+                    )
                 )
 
                 print(
@@ -243,7 +371,7 @@ def create_perception_callback(
                 )
 
                 print(
-                    "3D localisation error:",
+                    "Raw 3D localisation error:",
                     position_error,
                     "m",
                 )
@@ -265,12 +393,11 @@ def create_perception_callback(
             except Exception as error:
 
                 print(
-                    "(skipping ground-truth comparison -- "
-                    f"'{target_name}' not recognised: {error})"
+                    "Skipping evaluation-only "
+                    "ground-truth comparison:",
+                    error,
                 )
 
-        # Task 4 only needs True / False
-        # from is_target_visible().
         return (
             result.status == "success"
             and result.target is not None
