@@ -7,20 +7,57 @@ from PIL import Image
 
 from camera_grounding import bbox_depth_to_world
 
-from task_4.robot_skills import (
-    OBJECT_PROPERTIES,
-)
 
 # ==========================================================
 # PROJECT PATHS
 # ==========================================================
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-TASK4_DIR = PROJECT_ROOT / "task 4"
+PROJECT_ROOT = Path(
+    __file__
+).resolve().parent.parent
 
-for path in [PROJECT_ROOT, TASK4_DIR]:
+TASK4_DIR = (
+    PROJECT_ROOT
+    / "task 4"
+)
+
+for path in [
+    PROJECT_ROOT,
+    TASK4_DIR,
+]:
+
     if str(path) not in sys.path:
-        sys.path.insert(0, str(path))
+
+        sys.path.insert(
+            0,
+            str(path),
+        )
+
+
+# ==========================================================
+# TASK IMPORTS
+# ==========================================================
+
+from task_2.perception import (
+    ground_object,
+)
+
+from task_3.planner import (
+    plan_from_instruction,
+)
+
+from task_3.voice_input import (
+    listen_and_transcribe,
+)
+
+from task_4.task_4_executor import (
+    Task4Executor,
+)
+
+from task_4.robot_skills import (
+    OBJECT_PROPERTIES,
+)
+
 
 
 # ==========================================================
